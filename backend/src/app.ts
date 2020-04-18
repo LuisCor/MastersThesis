@@ -1,19 +1,18 @@
+// Dependencies
 import express from "express";
+import cors from "cors";
+
+// Initialization
 const app = express();
+app.use(cors())
 const port = 8080; // default port to listen
 
 
-// define a route handler for the default home page
-app.get( "/", ( req, res ) => {
-    // render the index template
-    res.send('Hello World');
-} );
+// Importing routes
+const users = require('./routes/users')
 
-// define a route handler for the default home page
-app.get( "/other", ( req, res ) => {
-    // render the index template
-    res.send('This is the other function');
-} );
+//  Assigning Routes
+app.use('/users', users);
 
 
 // start the express server
@@ -21,3 +20,9 @@ app.listen( port, () => {
     // tslint:disable-next-line:no-console
     console.log( `server started at http://localhost:${ port }` );
 } );
+
+const options = require('../swagger-options.json')
+
+const expressSwagger = require('express-swagger-generator')(app)
+
+expressSwagger(options)
