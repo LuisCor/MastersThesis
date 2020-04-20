@@ -5,21 +5,8 @@
             "title": "PhyRem server API",
             "version": "0.0.1"
         },
-        "host": "localhost:8080",
-        "basePath": "/v1",
-        "produces": [
-            "application/json",
-            "application/xml"
-        ],
-        "schemes": ["http", "https"],
-        "securityDefinitions": {
-            "JWT": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": ""
-            }
-        }
+        "host": "localhost:5000",
+        "basePath": "/"
     },
     "basedir": "./", 
     "files": ["./src/routes/**/*.ts"]
