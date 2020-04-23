@@ -1,8 +1,15 @@
-// const userController = require("../controllers/user.ctl.ts");
+///////// User Routes
+//  Here are the all the available functions related to User.
+//  These functions are responsible for receiving and interpreting the incomming requests
+//  and produce appropriate responses based on other system functions
 
-import express = require('express');
-const UsersSchema = require('../schemas/UsersSchema');
+
+import express from 'express';
+import UserController from '../controllers/user.ctl';
+import { UserInterface } from '../schemas/UsersSchema';
 const router = express.Router();
+const users = new UserController();
+
 
 /**
  * @typedef LoginInfo
@@ -10,97 +17,101 @@ const router = express.Router();
  * @property {string} password - This is a secret shh 🤫
  */
 
- /**
+/**
  * @typedef UserInfo
- * @property {string} id - Must be sent as 0 (to be fixed)
  * @property {string} username
  * @property {string} password
  * @property {string} name
+ * @property {string} role
+ * @property {string} address
  * @property {string} email
+ * @property {string} phone
  */
 
 /**
- * Loggs in a user, returns a token if successful
- * (Not Implemented, just a mockup)
+ * Lists all users registered in the system
  * 
- * @route POST /login
- * @param {LoginInfo.model} point.body.required - the new point
- * @group Users - These are the actions to be done by or to a user
- * @operationId login
+ * @route GET /
+ * @group Users - The actions and informations related to the system's users
+ * @operationId List all Users
  * @produces application/json application/xml
- * @consumes application/json application/xml
- * @returns {string} 200 - User login status
- * @returns {string}  400 - Unexpected error
+ * @returns {UserInfo.model} 200 - List of registered users
+ * @returns {string}  500 - Unexpected error
  */
 router.get("/", (req, res) => {
-    UsersSchema.find((err:any, data:any) => {
-        if (err) return res.json({ success: false, error: err });
-        return res.json({ success: true, data: data });
-      });
+  // Get the list of available users from the controller
+  users.listUsers()
+    .then((data) => (res.status(200).send(data)))
+    .catch((data) => (res.status(500).send(data)));
 })
 
-/**
- * Loggs in a user, returns a token if successful
- * (Not Implemented, just a mockup)
- * 
- * @route POST /login
- * @param {LoginInfo.model} point.body.required - the new point
- * @group Users - These are the actions to be done by or to a user
- * @operationId login
- * @produces application/json application/xml
- * @consumes application/json application/xml
- * @returns {string} 200 - User login status
- * @returns {string}  400 - Unexpected error
- */
-router.post("/login", (req, res) => {
-    res.send('Login attempt');
-});
 
 /**
+ * Lists users of a specific role
  * 
- * Creates a new user on the database
+ * @route GET /role/:role
+ * @param {string} role - The role of users to retrieve
+ * @group Users
+ * @operationId List Users with Role
+ * @produces application/json application/xml
+ * @returns {UserInfo.model} 200 - List of registered users with role
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/role/:role", (req, res) => {
+
+  // Get the list of users with role from the controller
+  users.listWithRole(req.params.role as string)
+    .then((data) => (res.status(200).send(data)))
+    .catch((data) => (res.status(500).send(data)));
+
+})
+
+
+/**
+ * Creates a new user in the system
  * 
- * 
- * @route POST /login
- * @param {UserInfo.model} point.body.required - the new user
- * @group Users - These are the actions to be done by or to a user
- * @operationId create
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
  * @produces application/json application/xml
  * @consumes application/json application/xml
- * @returns {string} 200 - User creating successful
- * @returns {string}  400 - Unexpected error
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
  */
 router.post("/create", (req, res) => {
 
-    let newUser = new UsersSchema();
+  //Review this method with clearer eyes
 
-    console.log(req.body)
-    let {id, username, password, name, email} = req.body;
+  let newUser = {} as UserInterface;
 
-    //TODO move these checks to the appropriate schema, shouldn't be done here
-    if ((!id && id !== 0) || !username || !password || !name || !email) {
-        return res.json({
-          success: false,
-          error: 'INVALID INPUTS',
-        });
-      }
-      newUser.id = id;
-      newUser.username = username;
-      newUser.password = password;
-      newUser.nema = name;
-      newUser.email = email;
-      newUser.save((err:any) => {
-        if (err) return res.json({ success: false, error: err });
-        return res.json({ success: true });
-      });
+  let {
+    username,
+    password,
+    name,
+    role,
+    address,
+    email,
+    phone
+    } = req.body;
 
-    res.send('Login attempt');
+  //TODO move these checks to the appropriate schema, shouldn't be done here
+  if (!username || !password || !name || !role || !address || !email || !phone) {
+    return res.status(500).send("Missing input");
+  }
+
+  newUser.username = username;
+  newUser.password = password;
+  newUser.name = name;
+  newUser.role = role;
+  newUser.address = address;
+  newUser.email = email;
+  newUser.phone = phone;
+
+  users.createUser(newUser)
+    .then(() => res.sendStatus(200))
+    .catch((err: any) => res.status(500).send(err));
+
 });
-
-router.get("/profile", (req, res) => {
-    res.send('Profile info here');
-});
-
-
 
 module.exports = router;
