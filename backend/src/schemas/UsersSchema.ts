@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
+export interface UserLoginInterface {
+  username: string,
+  password: string
+}
+
+
 // TS interface describing a User
 export interface UserInterface extends mongoose.Document {
   username: string,

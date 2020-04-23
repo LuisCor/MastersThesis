@@ -6,7 +6,7 @@
 
 import express from 'express';
 import UserController from '../controllers/user.ctl';
-import { UserInterface } from '../schemas/UsersSchema';
+import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
 const router = express.Router();
 const users = new UserController();
 
@@ -93,7 +93,7 @@ router.post("/create", (req, res) => {
     address,
     email,
     phone
-    } = req.body;
+  } = req.body;
 
   //TODO move these checks to the appropriate schema, shouldn't be done here
   if (!username || !password || !name || !role || !address || !email || !phone) {
@@ -113,5 +113,40 @@ router.post("/create", (req, res) => {
     .catch((err: any) => res.status(500).send(err));
 
 });
+
+
+/**
+ * Creates a new user in the system
+ * 
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/login", (req, res) => {
+
+  //Review this method with clearer eyes
+
+  let loginData : UserLoginInterface = {
+    username : req.body.username,
+    password : req.body.password
+  };
+
+  //TODO move these checks to the appropriate schema, shouldn't be done here
+  if (!loginData.username || !loginData.password) {
+    return res.status(500).send("Missing input");
+  }
+
+  users.loginUser(loginData)
+    .then((data : any) => res.status(200).send(data))
+    .catch((err: any) => res.status(500).send(err));
+
+});
+
+
 
 module.exports = router;
