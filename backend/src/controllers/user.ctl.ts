@@ -17,7 +17,8 @@ export default class UserController {
                 else {
                     let treatedUser = {
                         ...newUser,
-                        password: bcrypt.hashSync(newUser.password, 8)
+                        // bcrypt hash second algorithm is the num of iterations on the salt, default is 10
+                        password: bcrypt.hashSync(newUser.password, 11)
                     }
 
 
@@ -32,42 +33,6 @@ export default class UserController {
                 }
             })
         });
-    }
-
-    public loginUser = (loginData: UserLoginInterface) => {
-
-        return new Promise((resolve, reject) => {
-            Users.findOne({ username: loginData.username })
-            .exec((err, user) => {
-                //If there's an error retrieving, reject
-                if (err) return reject(err);
-
-                //If no user is found, reject
-                if (!user) return reject({ message : "User Not found."});
-
-                //If a user exist, confirm password validity
-                var passwordIsValid : boolean = bcrypt.compareSync(
-                    loginData.password,
-                    user.password
-                );
-
-                //If not valid, reject
-                if (!passwordIsValid) {
-                    return reject({message : "Password invalid"});
-                }
-
-                //If valid, produce a token to return to the client
-                var token = jwt.sign({ id: user.id }, (process.env.JWT_SECRET as string), {
-                    expiresIn: 86400 // 24 hours
-                });
-
-                return resolve({
-                    username : user.username,
-                    accessToken : token
-                })
-            });
-        });
-
     }
 
     

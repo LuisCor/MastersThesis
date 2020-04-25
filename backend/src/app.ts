@@ -8,6 +8,8 @@ import cors from "cors";
 import mongoose from 'mongoose';
 import bodyParser from "body-parser";
 import logger from "morgan";
+import passport from "passport";
+import "./auth/auth"
 
 // Server Initialization
 const app = express();
@@ -22,13 +24,12 @@ mongoose.connect((process.env.MONGODB_ADDRESS as string) + "/PhyRemDB", { useNew
 
 let db = mongoose.connection;
 db.once('open', () => console.log('> Connected to the database'));
-// checks if connection with the database is successful
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
-// bodyParser, parses the request body to be a readable json format
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-// Server Requests Logging
 app.use(logger('dev'));
 
 // Importing routes

@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import Users from "../schemas/UsersSchema"
 const secret : string = process.env.JWT_SECRET as string;
-console.log("--> DEBUG: Using secret: ", secret)
 
 export default class Authentication {
 

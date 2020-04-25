@@ -3,8 +3,9 @@
 //  These functions are responsible for receiving and interpreting the incomming requests
 //  and produce appropriate responses based on other system functions
 
-
 import express from 'express';
+import passport from "passport";
+import jwt from "jsonwebtoken";
 import UserController from '../controllers/user.ctl';
 import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
 const router = express.Router();
@@ -79,38 +80,10 @@ router.get("/role/:role", (req, res) => {
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/create", (req, res) => {
+router.post("/create", passport.authenticate('signup', { session: false }), (req, res) => {
 
   //Review this method with clearer eyes
-
-  let newUser = {} as UserInterface;
-
-  let {
-    username,
-    password,
-    name,
-    role,
-    address,
-    email,
-    phone
-  } = req.body;
-
-  //TODO move these checks to the appropriate schema, shouldn't be done here
-  if (!username || !password || !name || !role || !address || !email || !phone) {
-    return res.status(500).send("Missing input");
-  }
-
-  newUser.username = username;
-  newUser.password = password;
-  newUser.name = name;
-  newUser.role = role;
-  newUser.address = address;
-  newUser.email = email;
-  newUser.phone = phone;
-
-  users.createUser(newUser)
-    .then(() => res.sendStatus(200))
-    .catch((err: any) => res.status(500).send(err));
+  res.status(200).json(req.user);
 
 });
 
@@ -127,23 +100,32 @@ router.post("/create", (req, res) => {
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/login", (req, res) => {
+router.post("/login", (req, res, next) => {
 
-  //Review this method with clearer eyes
+  passport.authenticate('login', async (err, user, info) => {
+    try {
+      if (err || !user)
+        return res.status(500).send("An error occured");
 
-  let loginData : UserLoginInterface = {
-    username : req.body.username,
-    password : req.body.password
-  };
+      // Custom callback, login func at auth.ts
+      req.login(user, { session: false }, async (error) => {
+        if (error) return next(error)
+        
+        const body = { 
+          _id: user._id,
+          username: user.username
+        };
 
-  //TODO move these checks to the appropriate schema, shouldn't be done here
-  if (!loginData.username || !loginData.password) {
-    return res.status(500).send("Missing input");
-  }
+        const token = jwt.sign({
+          user: body
+        }, process.env.JWT_SECRET as string);
 
-  users.loginUser(loginData)
-    .then((data : any) => res.status(200).send(data))
-    .catch((err: any) => res.status(500).send(err));
+        return res.status(200).json({ token });
+      });
+    } catch (error) {
+      return next(error);
+    }
+  })(req, res, next);
 
 });
 
