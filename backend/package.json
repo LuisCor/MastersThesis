@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node .",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "coverage": "jest --coverage",
     "tsc": "tsc",
     "dev": "ts-node-dev --respawn --transpileOnly ./src/app.ts",
     "prod": "tsc && node ./build/app.js"
@@ -54,7 +55,14 @@
     "ts-node-dev": "^1.0.0-pre.44"
   },
   "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/mongodb-memory-server": "^2.3.0",
+    "@types/supertest": "^2.0.8",
     "express-swagger-generator": "^1.1.17",
+    "jest": "^25.4.0",
+    "mongodb-memory-server": "^6.5.2",
+    "supertest": "^4.0.2",
+    "ts-jest": "^25.4.0",
     "tslint": "^6.1.1",
     "typescript": "^3.8.3"
   }

@@ -8,9 +8,11 @@ import { ExtractJwt } from "passport-jwt";
 passport.use('signup', new LocalStrategy({
     usernameField: 'username',
     passwordField: 'password',
-    passReqToCallback: true
+    // Forwards the request received on the root to the following function at the first argument
+    passReqToCallback: true 
 }, async (req, username, password, done) => {
     try {
+
         const user = await Users.create({
             username,
             password,
@@ -20,7 +22,7 @@ passport.use('signup', new LocalStrategy({
             email : req.body.email,
             phone : req.body.phone
         } as UserInterface);
-        console.log("--> DEBUG: Creating user: ", user)
+
         return done(null, user);
     } catch (error) {
         done(error);
@@ -48,6 +50,7 @@ passport.use('login', new LocalStrategy({
         return done(error);
     }
 }));
+
 
 //This verifies that the token sent by the user is valid
 //  Token is sent on the http header for "Bearer"

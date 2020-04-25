@@ -118,7 +118,7 @@ router.post("/login", (req, res, next) => {
 
         const token = jwt.sign({
           user: body
-        }, process.env.JWT_SECRET as string);
+        }, process.env.JWT_SECRET as string, { algorithm: 'HS384'});
 
         return res.status(200).json({ token });
       });
@@ -129,6 +129,26 @@ router.post("/login", (req, res, next) => {
 
 });
 
+/**
+ * Get profile information of a user
+ * 
+ * @route GET /role/:role
+ * @param {string} role - The role of users to retrieve
+ * @group Users
+ * @operationId List Users with Role
+ * @produces application/json application/xml
+ * @returns {UserInfo.model} 200 - List of registered users with role
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/profile/:username", passport.authenticate('jwt', { session: false }), (req, res) => {
+
+  // Get the list of users with role from the controller
+  users.profileInfo(req.params.username as string)
+    .then((data) => (res.status(200).send(data)))
+    .catch((data) => (res.status(500).send(data)));
+
+})
 
 
-module.exports = router;
+
+export default router;
