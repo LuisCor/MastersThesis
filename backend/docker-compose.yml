@@ -9,7 +9,7 @@ networks:
 
 services:
 
-  mongo:
+  phyrem-mongo:
     container_name: phyrem-mongo
     restart: always
     image: mongo
@@ -19,10 +19,10 @@ services:
         aliases:
           - phyrem-mongo
 
-  backend:
+  phyrem-backend:
     container_name: phyrem-backend
     restart: always
-    depends_on: [mongo]
+    depends_on: [phyrem-mongo]
     build: .
     ports:
       - "5000:5000"
@@ -34,7 +34,7 @@ services:
         aliases:
           - phyrem-backend
 
-  redoc:
+  phyrem-docs:
     image: redocly/redoc
     container_name: phyrem-docs
     restart: always

@@ -1,4 +1,6 @@
-import Users, { UserInterface } from "../schemas/UsersSchema";
+import Users, { UserInterface, UserLoginInterface } from "../schemas/UsersSchema";
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 
 export default class UserController {
@@ -7,20 +9,7 @@ export default class UserController {
 
     }
 
-    public createUser(newUser: UserInterface) {
-        return new Promise((resolve, reject) => {
-            Users.countDocuments({ username : newUser.username }, (err, count) => {
-                if(count > 0)
-                    reject("Username taken");
-                else {
-                    Users.create(newUser)
-                    .then(() => resolve())
-                    .catch((err) => reject(err))
-                }
-            })
-        });
-    }
-    
+
     public listUsers() {
         return new Promise((resolve, reject) => {
             Users.find((err: any, data: any) => {
@@ -32,9 +21,20 @@ export default class UserController {
     };
 
 
-    public listWithRole(searchRole : string) {
+    public listWithRole(searchRole: string) {
         return new Promise((resolve, reject) => {
-            Users.find({ role : searchRole},(err: any, data: any) => {
+            Users.find({ role: searchRole }, (err: any, data: any) => {
+                if (err)
+                    return reject(err);
+                return resolve(data);
+            });
+        });
+    };
+
+
+    public profileInfo(username: string) {
+        return new Promise((resolve, reject) => {
+            Users.find({ username: username }, (err: any, data: any) => {
                 if (err)
                     return reject(err);
                 return resolve(data);
