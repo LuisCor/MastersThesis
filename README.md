@@ -1,5 +1,8 @@
 # **Phyrem** - A service for remote physiotherapy
 
+[![CircleCI](https://circleci.com/github/luiscor/MastersThesis.svg?style=svg&circle-token=2541639b24bfe3a5e2af3aecc28ac7cf53073dc6)](https://circleci.com/gh/LuisCor/MastersThesis/?branch=master)
+
+
 This repository contains the development of a complete system for providing remote physiothrapy.
 
 ## Usage
