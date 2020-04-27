@@ -21,7 +21,7 @@ export interface UserInterface extends mongoose.Document {
 };
 
 // Mongo Schema describing a User for the db
-export const UserSchema = new Schema(
+export const UserSchema = new mongoose.Schema(
   {
 
     username: {type: String, required: true},

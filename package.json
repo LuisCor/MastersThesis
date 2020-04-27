@@ -5,10 +5,9 @@
   "main": "build/app.js",
   "scripts": {
     "build": "tsc",
-    "start": "node .",
+    "start": "node build/app.js",
     "test": "jest",
     "coverage": "jest --coverage",
-    "tsc": "tsc",
     "dev": "ts-node-dev --respawn --transpileOnly ./src/app.ts",
     "prod": "tsc && node ./build/app.js"
   },
@@ -55,6 +54,7 @@
     "ts-node-dev": "^1.0.0-pre.44"
   },
   "devDependencies": {
+    "@shelf/jest-mongodb": "^1.1.5",
     "@types/jest": "^25.2.1",
     "@types/mongodb-memory-server": "^2.3.0",
     "@types/supertest": "^2.0.8",

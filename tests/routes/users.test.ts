@@ -1,54 +1,60 @@
-// Loading environment variables
-import * as dotenv from "dotenv";
-dotenv.config({path : "./tests/.env.test"});
-
-import app from "../../src/app";
-import mongoose from "mongoose";
-import request from 'supertest';
+import request from 'supertest'
+import app from "../app.test";
+import Users, { UserInterface } from "../../src/schemas/UsersSchema"
+import mongoose from "mongoose"
 import { MongoMemoryServer } from "mongodb-memory-server"
-import UserSchema from "../../src/schemas/UsersSchema"
+import { doesIntersect } from 'tslint';
 
-describe('User', () => {
-  let mongoServer : MongoMemoryServer;
-  beforeAll(async () => {
-    mongoServer = new MongoMemoryServer();
-    const URI = await mongoServer.getUri();
+jest.setTimeout(600000);
 
-    mongoose.connect(URI, {
-      useNewUrlParser: true,
-      useCreateIndex: true,
-      useUnifiedTopology: true,
-    }, (err) => {
-        if (err) {
-            console.log ('Unable to connect', err);
-            process.exit (1);
-          }else{
-            console.log('Succesfully connected');
-          }
-    });
+let mongoServer: MongoMemoryServer;
+
+let connection: any;
+let db: any;
+
+beforeAll(async () => {
+  mongoServer = new MongoMemoryServer();
+  const mongoUri = await mongoServer.getUri();
+  await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
+    if (err) console.error(err);
+  });
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+  app.close();
+});
+
+describe('Testing User Controller', () => {
+
+  let mockUser = {
+    username: "luiscor",
+    password: "qwe123",
+    name: "Luis Correia",
+    role: "patient",
+    address: "Rua das Cenas, n8",
+    email: "luis@email",
+    phone: "912344356"
+  };
+
+  it('DB Sanity Check', async () => {
+
+
+    await new Users(mockUser).save();
+    const count = await Users.countDocuments();
+    expect(count).toEqual(1);
+
   });
 
-  afterAll(async (done) => {
-    mongoose.disconnect(done);
-    await mongoServer.stop();
-    app.close();
-  });
+  it('Fetching db with one element', async () => {
 
-  afterEach(async () => {
-    const collections = await mongoose.connection.db.collections();
-
-    for (let collection of collections) {
-      await collection.deleteMany({});
-    }
-
-  });
-
-  it('Listing the empty user list', async () => {
-    const response = await request(app)
+    const res = await request(app)
       .get('/users')
+      
+    expect(res.status).toEqual(200)
+    expect(res.body).toHaveLength(1)
 
-    expect(response.status).toBe(200);
   });
-  
 
-})
+});

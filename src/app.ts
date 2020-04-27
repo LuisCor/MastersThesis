@@ -2,9 +2,21 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
+import mongoose from "mongoose"
 import app from "./server"
 
 const port = process.env.SERVER_PORT;
+
+// Connecting to database
+mongoose.connect((process.env.MONGODB_ADDRESS as string) + "/PhyRemDB", { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("> MongoDB connected…"))
+    .catch((err: any) => console.log(err)) //err with any type... not nice :( Fix this later
+//TODO If an error occurs a new connection should be attempted again
+
+let db = mongoose.connection;
+db.once('open', () => console.log('> Connected to the database'));
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 
 // Initialize the Express Server
 const server = app.listen(port, () => {
