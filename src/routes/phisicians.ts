@@ -1,4 +1,4 @@
-///////// User Routes
+2///////// Physician Routes
 //  Here are the all the available functions related to User.
 //  These functions are responsible for receiving and interpreting the incomming requests
 //  and produce appropriate responses based on other system functions
@@ -10,6 +10,10 @@ import UserController from '../controllers/user.ctl';
 import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
 const router = express.Router();
 const users = new UserController();
+
+//////////////////////////////////////////////////////////////////////////////////
+// TODO ALL THIS
+//////////////////////////////////////////////////////////////////////////////////
 
 
 /**

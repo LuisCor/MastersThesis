@@ -1,6 +1,4 @@
 import Users, { UserInterface, UserLoginInterface } from "../schemas/UsersSchema";
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
 
 
 export default class UserController {

@@ -1,50 +1,62 @@
 import passport from "passport";
 import {Strategy as LocalStrategy} from "passport-local";
-import Users, { UserInterface } from "../schemas/UsersSchema";
 import { Strategy as JWTstrategy } from "passport-jwt";
 import { ExtractJwt } from "passport-jwt";
+import Patients, { PatientInterface } from "../schemas/PatientSchema";
 
 //Create a passport middleware to handle user registration
 passport.use('signup', new LocalStrategy({
-    usernameField: 'username',
+    usernameField: 'email',
     passwordField: 'password',
     // Forwards the request received on the root to the following function at the first argument
     passReqToCallback: true 
-}, async (req, username, password, done) => {
+}, async (req, email, password, done) => {
     try {
 
-        const user = await Users.create({
-            username,
+        const patient = await Patients.create({
+            
+            email,
             password,
             name : req.body.name,
-            role : req.body.role,
-            address : req.body.address,
-            email : req.body.email,
-            phone : req.body.phone
-        } as UserInterface);
+            role: req.body.role,
+            birthDate: req.body.birthDate,
+            address: req.body.address,
+            identificationNum: req.body.identificationNum,
+            fiscalNumber: req.body.fiscalNumber,
+        
+            job: req.body.job,
+            gender: req.body.gender,
+            phoneNumber: req.body.phoneNumber,
+            healthSystem: req.body.healthSystem,
+            healthSystemNum: req.body.healthSystemNum
+        
+        } as PatientInterface);
 
-        return done(null, user);
+        delete patient.__v;
+        delete patient.password;
+
+        return done(null, patient);
     } catch (error) {
-        done(error);
+        done(error.message);
     }
 }));
 
 //Create a passport middleware to handle User login
 passport.use('login', new LocalStrategy({
-    usernameField: 'username',
+    usernameField: 'email',
     passwordField: 'password'
 }, async (username, password, done) => {
     try {
-        const user = await Users.findOne({ username });
+        const patient = await Patients.findOne({ username });
 
-        if (!user)
-            return done(null, false, { message: 'User not found' });
+        if (!patient)
+            return done(null, false, { message: 'Patient not found' });
 
-        const validate = await user.isValidPassword(password);
+        const validate = await patient.isValidPassword(password);
         if (!validate)
             return done(null, false, { message: 'Wrong Password' });
 
-        return done(null, user, { message: 'Logged in Successfully' });
+        return done(null, patient, { message: 'Logged in Successfully' });
 
     } catch (error) {
         return done(error);

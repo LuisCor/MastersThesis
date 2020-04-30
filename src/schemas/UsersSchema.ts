@@ -24,16 +24,30 @@ export interface UserInterface extends mongoose.Document {
 export const UserSchema = new mongoose.Schema(
   {
 
-    username: {type: String, required: true},
+    username: {type: String, required: true, unique: true},
     password: {type: String, required: true},
     name: {type: String, required: true},
     role: {type: String, required: true},
     address: {type: String, required: true},
-    email: {type: String, required: true},
+    email: {type: String, required: true, unique: true},
     phone: {type: String, required: true},
 
   }
 );
+
+
+UserSchema.pre('validate', function (next, data) {
+
+  const user : UserInterface = this as UserInterface;
+  Users.findOne({username : user.username}, (err, res) => {
+    if(!res)
+      next();
+    else{
+      next(new Error("User already registered"))
+    }
+  })
+
+})
 
 //This is called a pre-hook, before the user information is saved in the database
 //this function will be called, we'll get the plain text password, hash it and store it.
