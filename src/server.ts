@@ -19,9 +19,11 @@ app.use(logger('dev'));
 // Importing routes
 import Users from './routes/users'
 import Physicians from "./routes/physicians";
+import Patients from "./routes/patients";
 
 //  Assigning Routes
-app.use('/user', Users);
+app.use('/', Users);
 app.use('/physician', Physicians)
+app.use('/patient', Patients)
 
 export default app

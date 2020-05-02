@@ -1,4 +1,4 @@
-import Physicians from "../schemas/PhysicianSchema";
+import Patients from "../schemas/PatientSchema";
 
 //TODO : This class
 
@@ -12,7 +12,7 @@ export default class PhysicianController {
 
     public listUsers() {
         return new Promise((resolve, reject) => {
-            Physicians.find((err: any, data: any) => {
+            Patients.find((err: any, data: any) => {
                 if (err)
                     return reject(err);
                 return resolve(data);
@@ -23,7 +23,7 @@ export default class PhysicianController {
 
     public listWithRole(searchRole: string) {
         return new Promise((resolve, reject) => {
-            Physicians.find({ role: searchRole }, (err: any, data: any) => {
+            Patients.find({ role: searchRole }, (err: any, data: any) => {
                 if (err)
                     return reject(err);
                 return resolve(data);
@@ -34,7 +34,7 @@ export default class PhysicianController {
 
     public profileInfo(username: string) {
         return new Promise((resolve, reject) => {
-            Physicians.find({ username: username }, (err: any, data: any) => {
+            Patients.find({ username: username }, (err: any, data: any) => {
                 if (err)
                     return reject(err);
                 return resolve(data);

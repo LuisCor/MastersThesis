@@ -4,7 +4,6 @@ import { Strategy as JWTstrategy } from "passport-jwt";
 import { ExtractJwt } from "passport-jwt";
 import Patients, { PatientInterface } from "../schemas/PatientSchema";
 import Physicians, { PhysicianInterface } from "../schemas/PhysicianSchema";
-import PhysicianController from "src/controllers/physician.ctl";
 
 //Create a passport middleware to handle user registration
 passport.use('signup', new LocalStrategy({
@@ -65,50 +64,42 @@ passport.use('signup', new LocalStrategy({
 }));
 
 //Create a passport middleware to handle User login
-passport.use('physicianLogin', new LocalStrategy({
+passport.use('login', new LocalStrategy({
     usernameField: 'email',
-    passwordField: 'password'
-}, async (username, password, done) => {
+    passwordField: 'password',
+    passReqToCallback: true
+}, async (req, username, password, done) => {
     try {
-        const patient = await Physicians.findOne({ email: username });
 
-        if (!patient)
-            return done(null, false, { message: 'Physician not found' });
+        let user;
 
-        const validate = await patient.isValidPassword(password);
+        console.log(req)
+
+        if(req.query.role === "PHYSICIAN") {
+            user = await Physicians.findOne({ email: username });
+
+            if (!user)
+                return done(null, false, { message: 'Physician not found' });
+        } else if (req.query.role === "PATIENT") {
+            user = await Patients.findOne({ email: username });
+
+            if (!user)
+                return done(null, false, { message: 'Patient not found' });
+        } else
+            return done(null, false, { message: 'User login error' });
+
+        
+
+        const validate = await user.isValidPassword(password);
         if (!validate)
             return done(null, false, { message: 'Wrong Password' });
 
-        return done(null, patient, { message: 'Logged in Successfully' });
+        return done(null, user, { message: 'Logged in Successfully' });
 
     } catch (error) {
         return done(error);
     }
 }));
-
-
-//Create a passport middleware to handle User login
-passport.use('patientLogin', new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password'
-}, async (username, password, done) => {
-    try {
-        const patient = await Patients.findOne({ email: username });
-
-        if (!patient)
-            return done(null, false, { message: 'Patient not found' });
-
-        const validate = await patient.isValidPassword(password);
-        if (!validate)
-            return done(null, false, { message: 'Wrong Password' });
-
-        return done(null, patient, { message: 'Logged in Successfully' });
-
-    } catch (error) {
-        return done(error);
-    }
-}));
-
 
 
 //This verifies that the token sent by the user is valid
