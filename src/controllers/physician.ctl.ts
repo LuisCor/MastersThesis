@@ -2,7 +2,10 @@ import Users, { UserInterface, UserLoginInterface } from "../schemas/UsersSchema
 import Patients from "../schemas/PatientSchema";
 
 
-export default class UserController {
+//TODO : This class
+
+
+export default class PhysicianController {
 
     constructor() {
 

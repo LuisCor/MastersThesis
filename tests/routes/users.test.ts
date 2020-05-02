@@ -63,7 +63,7 @@ describe('Testing User Controller', () => {
 
 
     await new Users(mockUser).save();
-    const count = await Users.countDocuments();s
+    const count = await Users.countDocuments();
     expect(count).toEqual(1);
 
   });

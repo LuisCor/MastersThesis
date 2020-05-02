@@ -6,6 +6,7 @@
 import express from 'express';
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import { roleAuthorization } from "../auth/auth"
 import UserController from '../controllers/user.ctl';
 import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
 const router = express.Router();
@@ -39,7 +40,7 @@ const users = new UserController();
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", (req, res) => {
+router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT']), (req, res, next) => {
   // Get the list of available users from the controller
   users.listUsers()
     .then((data) => (res.status(200).send(data)))
@@ -108,7 +109,7 @@ router.post("/", (req, res, next) => {
  */
 router.post("/login", (req, res, next) => {
 
-  passport.authenticate('login', async (err, user, info) => {
+  passport.authenticate('patientLogin', async (err, user, info) => {
     try {
       if (err || !user)
         return res.status(400).send(info.message);
@@ -119,7 +120,7 @@ router.post("/login", (req, res, next) => {
 
         const body = {
           _id: user._id,
-          username: user.username
+          role: user.role
         };
 
         const token = jwt.sign({
