@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs"
+import PatientSchema from "./PatientSchema"
+import Patients from "./PatientSchema";
 const Schema = mongoose.Schema;
 
 export interface PhysicianLoginInterface {
@@ -18,6 +20,7 @@ export interface PhysicianInterface extends mongoose.Document {
     birthDate: string,
     physicianID: string
     phoneNumber: number,
+    patients: Array<mongoose.Schema.Types.ObjectId>
 
     isValidPassword: Function
 };
@@ -26,13 +29,15 @@ export interface PhysicianInterface extends mongoose.Document {
 export const PhysicianSchema = new mongoose.Schema(
     {
         email: { type: String, required: true, unique: true },
-        name: { type: String, required: true},
-        password: { type: String, required: true},
-        role: { type: String, required: true},
-        gender: { type: String, required: true},
-        birthDate: { type: String, required: true},
-        physicianID: { type: String, required: true},
-        phoneNumber: { type: Number, required: true}
+        name: { type: String, required: true },
+        password: { type: String, required: true },
+        role: { type: String, required: true },
+        gender: { type: String, required: true },
+        birthDate: { type: String, required: true },
+        physicianID: { type: String, required: true },
+        phoneNumber: { type: Number, required: true },
+
+        patients: [{ type: Schema.Types.ObjectId, ref: 'Patients'}]
     }
 );
 
@@ -61,11 +66,12 @@ PhysicianSchema.pre('save', async function (next) {
 
 });
 
+
 //Hashes the password sent by the user for login and checks if the hashed password stored in the
 //database matches the one sent. Returns true if it does else false.
 PhysicianSchema.methods.isValidPassword = async function (password: string) {
-    const patient = this;
-    const compare = await bcrypt.compare(password, patient.password);
+    const physician = this;
+    const compare = await bcrypt.compare(password, physician.password);
     return compare;
 }
 

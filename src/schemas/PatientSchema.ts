@@ -25,6 +25,8 @@ export interface PatientInterface extends mongoose.Document {
     healthSystem: string,
     healthSystemNum: string,
 
+    physicians: Array<mongoose.Schema.Types.ObjectId>,
+
     isValidPassword: Function
 };
 
@@ -45,6 +47,8 @@ export const PatientSchema = new mongoose.Schema(
         phoneNumber: { type: Number, required: false },
         healthSystem: { type: String, required: false },
         healthSystemNum: { type: String, required: false },
+
+        physicians: [{ type: Schema.Types.ObjectId, ref: 'Physicians'}]
 
     }
 );

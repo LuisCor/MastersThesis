@@ -33,14 +33,14 @@ const users = new UserController();
 /**
  * Lists all users registered in the system
  * 
- * @route GET /
+ * @route GET /list
  * @group Users - The actions and informations related to the system's users
  * @operationId List all Users
  * @produces application/json application/xml
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT']), (req, res, next) => {
+router.get("/list", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT']), (req, res, next) => {
   // Get the list of available users from the controller
   users.listUsers()
     .then((data) => (res.status(200).send(data)))

@@ -8,7 +8,7 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
 import PhysicianController from '../controllers/physician.ctl';
-import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
+import { UserInterface, UserLoginInterface, UserRequestInfo } from '../schemas/UsersSchema';
 const router = express.Router();
 const physicians = new PhysicianController();
 
@@ -49,45 +49,38 @@ router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorizati
 
 
 /**
- * Creates a new user in the system
+ * Lists all users registered in the system
  * 
- * @route POST /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
+ * @route GET /
+ * @group Users - The actions and informations related to the system's users
+ * @operationId List all Users
  * @produces application/json application/xml
- * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
+ * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.post("/login", (req, res, next) => {
+router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
+  // Get the list of available users from the controller
+  physicians.adoptPatient((req.user as UserRequestInfo)._id , req.params.patientID)
+    .then((data) => (res.status(200).send(data)))
+    .catch((data) => (res.status(500).send(data)));
+})
 
-  passport.authenticate('physicianLogin', async (err, user, info) => {
-    try {
-      if (err || !user)
-        return res.status(400).send(info.message);
-
-      // Custom callback, login func at auth.ts
-      req.login(user, { session: false }, async (error) => {
-        if (error) return next(error)
-
-        const body = {
-          _id: user._id,
-          role: user.role
-        };
-
-        const token = jwt.sign({
-          user: body
-        }, process.env.JWT_SECRET as string, { algorithm: 'HS384' });
-
-        return res.status(200).json({ token });
-      });
-    } catch (error) {
-      return next(error);
-    }
-  })(req, res, next);
-
-});
+/**
+ * Lists all users registered in the system
+ * 
+ * @route GET /
+ * @group Users - The actions and informations related to the system's users
+ * @operationId List all Users
+ * @produces application/json application/xml
+ * @returns {UserInfo.model} 200 - List of registered users
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/drop/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
+  // Get the list of available users from the controller
+  physicians.dropPatient((req.user as UserRequestInfo)._id , req.params.patientID)
+    .then((data) => (res.status(200).send(data)))
+    .catch((data) => (res.status(500).send(data)));
+})
 
 /**
  * Get profile information of a user

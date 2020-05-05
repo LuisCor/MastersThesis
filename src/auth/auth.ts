@@ -73,23 +73,22 @@ passport.use('login', new LocalStrategy({
 
         let user;
 
-        console.log(req)
-
         if(req.query.role === "PHYSICIAN") {
             user = await Physicians.findOne({ email: username });
 
             if (!user)
                 return done(null, false, { message: 'Physician not found' });
+                
         } else if (req.query.role === "PATIENT") {
             user = await Patients.findOne({ email: username });
 
             if (!user)
                 return done(null, false, { message: 'Patient not found' });
+
         } else
             return done(null, false, { message: 'User login error' });
 
         
-
         const validate = await user.isValidPassword(password);
         if (!validate)
             return done(null, false, { message: 'Wrong Password' });
@@ -100,6 +99,21 @@ passport.use('login', new LocalStrategy({
         return done(error);
     }
 }));
+
+// These methods are used for by passport to provide a cookie based session,
+//  since we are using JWT these are not necessary, but will be kept if necessity arises
+//
+// passport.serializeUser(function(user : any, done) {
+// 	done(null, user._id);
+// });
+
+// passport.deserializeUser(function(id, done) {
+// 	Patients.findOne({ _id: id }).then(function(user) {
+//         done(null, user);
+//     }).catch(function(err) {
+//         done(err, null);
+//     });
+// });
 
 
 //This verifies that the token sent by the user is valid

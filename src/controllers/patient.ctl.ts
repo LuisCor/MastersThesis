@@ -3,43 +3,22 @@ import Patients from "../schemas/PatientSchema";
 //TODO : This class
 
 
-export default class PhysicianController {
+export default class PatientController {
 
     constructor() {
 
     }
 
 
-    public listUsers() {
-        return new Promise((resolve, reject) => {
-            Patients.find((err: any, data: any) => {
-                if (err)
-                    return reject(err);
-                return resolve(data);
-            });
-        });
-    };
+    //Returns the list of physicians taking care of this patient
+    public listPhysicians() {
+        return { message: "method not implemented yet" }
+    }
 
+    //Returns the list of pending exercises
+    public listExercises() {
+        return { message: "method not implemented yet" }
+    }
 
-    public listWithRole(searchRole: string) {
-        return new Promise((resolve, reject) => {
-            Patients.find({ role: searchRole }, (err: any, data: any) => {
-                if (err)
-                    return reject(err);
-                return resolve(data);
-            });
-        });
-    };
-
-
-    public profileInfo(username: string) {
-        return new Promise((resolve, reject) => {
-            Patients.find({ username: username }, (err: any, data: any) => {
-                if (err)
-                    return reject(err);
-                return resolve(data);
-            });
-        });
-    };
 
 }

@@ -84,7 +84,7 @@ router.post("/login", (req, res, next) => {
 
         const token = jwt.sign({
           user: body
-        }, process.env.JWT_SECRET as string, { algorithm: 'HS384' });
+        }, process.env.JWT_SECRET as string, { algorithm: 'HS384', expiresIn: '1h' });
 
         return res.status(200).json({ token });
       });
@@ -105,7 +105,7 @@ router.post("/login", (req, res, next) => {
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT']), (req, res, next) => {
+router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT', 'PHYSICIAN']), (req, res, next) => {
   // Get the list of available users from the controller
   users.listUsers()
     .then((data) => (res.status(200).send(data)))

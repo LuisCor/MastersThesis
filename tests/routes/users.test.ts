@@ -1,11 +1,10 @@
 import request from 'supertest'
 import app from "../app.test";
-import Users, { UserInterface } from "../../src/schemas/UsersSchema"
+import Patients from "../../src/schemas/PatientSchema"
 import mongoose from "mongoose"
 import { MongoMemoryServer } from "mongodb-memory-server"
-import { doesIntersect } from 'tslint';
 
-jest.setTimeout(600000);
+jest.setTimeout(20000);
 
 let mongoServer: MongoMemoryServer;
 
@@ -28,66 +27,84 @@ afterAll(async () => {
   app.close();
 });
 
+
+const mockPatient = {
+  email: "luiscor@mail",
+  password: "qweasd",
+  name: "Luis Cor",
+  role: "PATIENT",
+  birthDate: "15-12-1995",
+  address: "Rua das Cenas n7",
+  identificationNum: "1234 ZTP",
+  fiscalNumber: "6346346"
+}
+
+const mockPatient2 = {
+  email: "otherdude@mail",
+  password: "asdzxc",
+  name: "Other Dude",
+  role: "PATIENT",
+  birthDate: "15-12-2000",
+  address: "Rua da Liberdade lote 1",
+  identificationNum: "47546 ZTP",
+  fiscalNumber: "786787"
+}
+
+let token: string;
+
 describe('Testing User Controller', () => {
-
-  let mockUser = {
-    username: "luiscor",
-    password: "qwe123",
-    name: "Luis Correia",
-    role: "patient",
-    address: "Rua das Cenas, n8",
-    email: "luis@email",
-    phone: "912344356"
-  };
-
-  let mockUserResponse = {
-    username: "luiscor",
-    name: "Luis Correia",
-    role: "patient",
-    address: "Rua das Cenas, n8",
-    email: "luis@email",
-    phone: "912344356"
-  };
-
-  let mockUser2 = {
-    username: "johndoe",
-    password: "password",
-    name: "John Doe",
-    role: "patient",
-    address: "Rua da liberdade, 24",
-    email: "john@email",
-    phone: "123456789"
-  };
 
   it('DB Sanity Check', async () => {
 
-
-    await new Users(mockUser).save();
-    const count = await Users.countDocuments();
+    await new Patients(mockPatient).save();
+    const count = await Patients.countDocuments();
     expect(count).toEqual(1);
 
   });
 
-  it('Fetching db with one element', async () => {
+  it('User Login', async () => {
+    const res = await request(app)
+      .post('/login')
+      .query({email: mockPatient.email})
+      .query({password: mockPatient.password})
+      .query({role: mockPatient.role})
+      .send()
+
+    token = res.body.token;
+    
+    expect(res.status).toEqual(200);
+    expect(token).not.toBeNull();
+  })
+
+  it('Requests require auth by token', async () => {
 
     const res = await request(app)
-      .get('/users')
-      
+      .get('/')
+
+    expect(res.status).toEqual(401)
+
+  });
+
+  it('There is one registered user', async () => {
+    const res = await request(app)
+      .get('/')
+      .set('Authorization', `Bearer ${token}`)
+
     expect(res.status).toEqual(200)
     expect(res.body).toHaveLength(1)
 
   });
 
-  it('Registering new user', async () => {
+  // it('Registering new user', async () => {
 
-    const res = await request(app)
-      .post('/users')
-      .send(mockUser)
-      
-    expect(res.status).toEqual(200)
-    expect(res.body).toEqual(mockUserResponse)
+  //   const res = await request(app)
+  //     .post('/users')
+  //     .send(mockUser)
 
-  });
+  //   expect(res.status).toEqual(200)
+  //   expect(res.body).toEqual(mockUserResponse)
+
+  // });
 
 
 });

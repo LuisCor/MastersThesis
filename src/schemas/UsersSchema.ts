@@ -7,6 +7,10 @@ export interface UserLoginInterface {
   password: string
 }
 
+export interface UserRequestInfo {
+  _id: string,
+  role: string
+}
 
 // TS interface describing a User
 export interface UserInterface extends mongoose.Document {
