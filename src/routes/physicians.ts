@@ -40,12 +40,7 @@ const physicians = new PhysicianController();
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
-  // Get the list of available users from the controller
-  physicians.listUsers()
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-})
+router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.getPhysicianInfo)
 
 
 /**
@@ -58,12 +53,8 @@ router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorizati
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
-  // Get the list of available users from the controller
-  physicians.adoptPatient((req.user as UserRequestInfo)._id , req.params.patientID)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-})
+router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.adoptPatient)
+
 
 /**
  * Lists all users registered in the system
@@ -75,12 +66,7 @@ router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false})
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.post("/drop/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
-  // Get the list of available users from the controller
-  physicians.dropPatient((req.user as UserRequestInfo)._id , req.params.patientID)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-})
+router.post("/drop/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.dropPatient)
 
 /**
  * Get profile information of a user
@@ -105,3 +91,23 @@ router.get("/profile/:username", passport.authenticate('jwt', { session: false }
 
 
 export default router;
+
+
+///////////////////////////////////////////////////////////// LEGACY CODE - REFERENCE ONLY
+
+//// /**
+//  * Lists all users registered in the system
+//  * 
+//  * @route GET /
+//  * @group Users - The actions and informations related to the system's users
+//  * @operationId List all Users
+//  * @produces application/json application/xml
+//  * @returns {UserInfo.model} 200 - List of registered users
+//  * @returns {string}  500 - Unexpected error
+//  */
+// router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
+//   // Get the list of available users from the controller
+//   physicians.adoptPatient((req.user as UserRequestInfo)._id , req.params.patientID)
+//     .then((data) => (res.status(200).send(data)))
+//     .catch((data) => (res.status(500).send(data)));
+// })

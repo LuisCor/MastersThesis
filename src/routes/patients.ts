@@ -7,10 +7,11 @@ import express from 'express';
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
-import UserController from '../controllers/user.ctl';
+import PatientController from '../controllers/patient.ctl';
 import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
+import { PatientLoginInterface } from 'src/schemas/PatientSchema';
 const router = express.Router();
-const users = new UserController();
+const patients = new PatientController();
 
 
 /**
@@ -30,49 +31,31 @@ const users = new UserController();
  * @property {string} phone
  */
 
-/**
- * Lists all users registered in the system
- * 
- * @route GET /list
- * @group Users - The actions and informations related to the system's users
- * @operationId List all Users
- * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users
- * @returns {string}  500 - Unexpected error
- */
-router.get("/list", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT']), (req, res, next) => {
-  // Get the list of available users from the controller
-  users.listUsers()
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-})
 
+// /**
+//  * Get Patient information
+//  * 
+//  * @route Get /
+//  * @param {UserInfo.model} point.body.required - The information of the new user
+//  * @group Users
+//  * @operationId Create a new User
+//  * @produces application/json application/xml
+//  * @consumes application/json application/xml
+//  * @returns {string} 200 - User creation successful
+//  * @returns {string}  500 - Unexpected error
+//  */
+// router.get("/", passport.authenticate('jwt', { session: false }), roleAuthorization(['PATIENT']), (req, res) => {
 
-/**
- * Lists users of a specific role
- * 
- * @route GET /role/:role
- * @param {string} role - The role of users to retrieve
- * @group Users
- * @operationId List Users with Role
- * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users with role
- * @returns {string}  500 - Unexpected error
- */
-router.get("/role/:role", (req, res) => {
+//   patients.getPatientInfo((req.user as PatientLoginInterface)._id)
+//   .then((data) => (res.status(200).send(data)))
+//   .catch((err) => (res.status(400).send(err)))
 
-  // Get the list of users with role from the controller
-  users.listWithRole(req.params.role as string)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-
-})
-
+// });
 
 /**
- * Creates a new user in the system
+ * Get Patient information
  * 
- * @route POST /
+ * @route Get /
  * @param {UserInfo.model} point.body.required - The information of the new user
  * @group Users
  * @operationId Create a new User
@@ -81,40 +64,7 @@ router.get("/role/:role", (req, res) => {
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/", (req, res, next) => {
-
-  passport.authenticate('signup', { session: false }, async (err, user, info) => {
-    if (err) {
-      return res.status(400).send({ message: err })
-    }
-    else
-      return res.status(200).send(user)
-  })(req, res, next);
-
-});
-
-
-
-/**
- * Get profile information of a user
- * 
- * @route GET /role/:role
- * @param {string} role - The role of users to retrieve
- * @group Users
- * @operationId List Users with Role
- * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users with role
- * @returns {string}  500 - Unexpected error
- */
-router.get("/profile/:username", passport.authenticate('jwt', { session: false }), (req, res) => {
-
-  // Get the list of users with role from the controller
-  users.profileInfo(req.params.username as string)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-
-})
-
+router.get("/", passport.authenticate('jwt', { session: false }), roleAuthorization(['PATIENT']), patients.getPatientInfo);
 
 
 export default router;
