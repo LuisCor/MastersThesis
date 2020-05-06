@@ -1,6 +1,5 @@
 import Users, { UserInterface, UserLoginInterface } from "../schemas/UsersSchema";
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import Patients from "../schemas/PatientSchema";
 
 
 export default class UserController {
@@ -12,7 +11,7 @@ export default class UserController {
 
     public listUsers() {
         return new Promise((resolve, reject) => {
-            Users.find((err: any, data: any) => {
+            Patients.find((err: any, data: any) => {
                 if (err)
                     return reject(err);
                 return resolve(data);
