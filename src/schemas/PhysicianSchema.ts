@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs"
-import PatientSchema from "./PatientSchema"
-import Patients from "./PatientSchema";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 const Schema = mongoose.Schema;
 
 export interface PhysicianLoginInterface {
@@ -16,13 +15,17 @@ export interface PhysicianInterface extends mongoose.Document {
     name: string,
     password: string,
     role: string,
+    specialty: string,
     gender: string,
     birthDate: string,
     physicianID: string
     phoneNumber: number,
+
     patients: Array<mongoose.Schema.Types.ObjectId>
 
-    isValidPassword: Function
+    isValidPassword: Function,
+    generatePasswordReset: Function,
+    setPassword: Function
 };
 
 // Mongo Schema describing a User for the db
@@ -37,7 +40,7 @@ export const PhysicianSchema = new mongoose.Schema(
         physicianID: { type: String, required: true },
         phoneNumber: { type: Number, required: true },
 
-        patients: [{ type: Schema.Types.ObjectId, ref: 'Patients'}]
+        patients: [{ type: Schema.Types.ObjectId, ref: 'Patients' }]
     }
 );
 
@@ -58,6 +61,8 @@ PhysicianSchema.pre('validate', function (next, data) {
 //This is called a pre-hook, before the user information is saved in the database
 //this function will be called, we'll get the plain text password, hash it and store it.
 PhysicianSchema.pre('save', async function (next) {
+    if (!this.isNew)
+        next();
 
     const patient: PhysicianInterface = this as PhysicianInterface;
     const hash = await bcrypt.hash(patient.password, 10);
@@ -66,6 +71,12 @@ PhysicianSchema.pre('save', async function (next) {
 
 });
 
+//Used to update the password by receiving the new string and hashing it
+PhysicianSchema.methods.setPassword = async function (password: string) {
+    const patient: PhysicianInterface = this as PhysicianInterface;
+    const hash = await bcrypt.hash(password, 10);
+    patient.password = hash;
+}
 
 //Hashes the password sent by the user for login and checks if the hashed password stored in the
 //database matches the one sent. Returns true if it does else false.
@@ -74,6 +85,12 @@ PhysicianSchema.methods.isValidPassword = async function (password: string) {
     const compare = await bcrypt.compare(password, physician.password);
     return compare;
 }
+
+PhysicianSchema.methods.generatePasswordReset = function () {
+    this.passwordRecoveryToken = crypto.randomBytes(20).toString('hex');
+    this.passwordRecoveryExpires = Date.now() + 1800000; //expires in half an hour
+};
+
 
 const Physicians = mongoose.model<PhysicianInterface>('Physicians', PhysicianSchema);
 export default Physicians;

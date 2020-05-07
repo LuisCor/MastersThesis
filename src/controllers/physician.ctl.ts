@@ -11,6 +11,19 @@ export default class PhysicianController {
 
     }
 
+    public async updateProfileInfo(req: any, res: any) {
+        try {
+            if(req.body.password)
+                return res.status(400).send({error: "Password can not be changed this way"})
+                
+            const updatedUser = await Physicians.findByIdAndUpdate(req.user._id, req.body)
+
+            return res.status(200).send({message: "User updated"})
+        } catch (error) {
+            console.error(error); return res.status(500).send({error: "An error occurred when updating: " + error})
+        }
+    }
+
     public async getPhysicianInfo(req: any, res: any) {
 
         try {

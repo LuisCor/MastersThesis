@@ -30,18 +30,6 @@ const physicians = new PhysicianController();
  * @property {string} phone
  */
 
-/**
- * Lists all users registered in the system
- * 
- * @route GET /
- * @group Users - The actions and informations related to the system's users
- * @operationId List all Users
- * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users
- * @returns {string}  500 - Unexpected error
- */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.getPhysicianInfo)
-
 
 /**
  * Lists all users registered in the system
@@ -79,14 +67,20 @@ router.post("/drop/:patientID", passport.authenticate("jwt", {session : false}),
  * @returns {UserInfo.model} 200 - List of registered users with role
  * @returns {string}  500 - Unexpected error
  */
-router.get("/profile/:username", passport.authenticate('jwt', { session: false }), (req, res) => {
+router.get("/profile", passport.authenticate('jwt', { session: false }), roleAuthorization(['PHYSICIAN']), physicians.getPhysicianInfo)
 
-  // Get the list of users with role from the controller
-  physicians.profileInfo(req.params.username as string)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-
-})
+/**
+ * Get profile information of a user
+ * 
+ * @route GET /role/:role
+ * @param {string} role - The role of users to retrieve
+ * @group Users
+ * @operationId List Users with Role
+ * @produces application/json application/xml
+ * @returns {UserInfo.model} 200 - List of registered users with role
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/profile", passport.authenticate('jwt', { session: false }), roleAuthorization(['PHYSICIAN']), physicians.updateProfileInfo)
 
 
 

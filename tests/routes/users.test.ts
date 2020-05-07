@@ -52,7 +52,7 @@ const mockPatient2 = {
 
 let token: string;
 
-describe('Testing User Controller', () => {
+describe('Testing User Routes', () => {
 
   it('DB Sanity Check', async () => {
 
@@ -79,7 +79,7 @@ describe('Testing User Controller', () => {
   it('Requests require auth by token', async () => {
 
     const res = await request(app)
-      .get('/')
+      .get('/patient')
 
     expect(res.status).toEqual(401)
 
@@ -87,24 +87,31 @@ describe('Testing User Controller', () => {
 
   it('There is one registered user', async () => {
     const res = await request(app)
-      .get('/')
+      .get('/patient')
       .set('Authorization', `Bearer ${token}`)
 
     expect(res.status).toEqual(200)
-    expect(res.body).toHaveLength(1)
+    expect(res.body).toHaveProperty("email")
+    expect(res.body).toHaveProperty("name")
+    expect(res.body).toHaveProperty("role")
+    expect(res.body).toHaveProperty("birthDate")
+    expect(res.body).toHaveProperty("address")
+    expect(res.body).toHaveProperty("identificationNum")
+    expect(res.body).toHaveProperty("fiscalNumber")
 
   });
 
-  // it('Registering new user', async () => {
+  it('Registering new user', async () => {
 
-  //   const res = await request(app)
-  //     .post('/users')
-  //     .send(mockUser)
+    const res = await request(app)
+      .post('/')
+      .send(mockPatient2)
 
-  //   expect(res.status).toEqual(200)
-  //   expect(res.body).toEqual(mockUserResponse)
+    expect(res.status).toEqual(200)
+    expect(res.body).toHaveProperty("email")
+    expect(res.body).toHaveProperty("id")
 
-  // });
+  });
 
 
 });

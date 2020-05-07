@@ -8,25 +8,22 @@ export default class PatientController {
 
     }
 
-    // public getPatientInfo(patientID: string) {
+    public async updateProfileInfo(req: any, res: any) {
+        try {
+            if(req.body.password)
+                return res.status(400).send({error: "Password can not be changed this way"})
+                
+            const updatedUser = await Patients.findByIdAndUpdate(req.user._id, req.body)
 
-    //     return new Promise((resolve, reject) => {
-    //         Patients.findById(patientID,'-password -__v', (err, patient) => {
-    //             if(err)
-    //                 return reject({error: "Could not retrieve patient information", err})
-    //             if(patient === undefined)
-    //                 return reject({error: "Patient " + patientID + " not found"})
-    //             else {
-    //                 resolve(patient);
-    //             }
-    //         })
-    //     })
-
-    // }
+            return res.status(200).send({message: "User updated"})
+        } catch (error) {
+            console.error(error); return res.status(500).send({error: "An error occurred when updating: " + error})
+        }
+    }
 
     public async getPatientInfo(req: any, res: any) {
 
-        Patients.findById(req.user._id, '-password -__v', (err, patient) => {
+        await Patients.findById(req.user._id, '-password -__v', (err, patient) => {
             if (err)
                 return res.status(400).send({ error: "Could not retrieve patient information" + err });
             if (patient === undefined)

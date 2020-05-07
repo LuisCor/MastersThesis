@@ -96,41 +96,31 @@ router.post("/login", (req, res, next) => {
 });
 
 /**
- * Lists all users registered in the system
+ * Creates a new user in the system
  * 
- * @route GET /
- * @group Users - The actions and informations related to the system's users
- * @operationId List all Users
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
  * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT', 'PHYSICIAN']), (req, res, next) => {
-  // Get the list of available users from the controller
-  users.listUsers()
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-})
-
+router.get("/recoverPassword", users.recoverPassword)
 
 /**
- * Lists users of a specific role
+ * Creates a new user in the system
  * 
- * @route GET /role/:role
- * @param {string} role - The role of users to retrieve
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
  * @group Users
- * @operationId List Users with Role
+ * @operationId Create a new User
  * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users with role
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.get("/role/:role", (req, res) => {
-
-  // Get the list of users with role from the controller
-  users.listWithRole(req.params.role as string)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-
-})
+router.post("/resetPassword/:role/:token", users.resetPassword)
 
 export default router;
