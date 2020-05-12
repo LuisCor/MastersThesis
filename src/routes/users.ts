@@ -8,6 +8,7 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
 import UserController from '../controllers/user.ctl';
+import { check, validationResult } from 'express-validator';
 import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
 const router = express.Router();
 const users = new UserController();
@@ -42,16 +43,25 @@ const users = new UserController();
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/", (req, res, next) => {
-  
+router.post("/", [
+  check('email').normalizeEmail().isEmail(),
+  check('password').isLength({ min: 5 }),
+  check('name').escape(),
+  check('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN"))
+], (req: any, res: any, next: any) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(422).json({ errors: errors.array() });
+
   passport.authenticate('signup', { session: false }, async (err, user, info) => {
     if (err) {
       return res.status(400).send({ message: err })
     }
     else
-    return res.status(200).send(user)
+      return res.status(200).send(user)
   })(req, res, next);
-  
+
 });
 
 /**

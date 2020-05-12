@@ -8,6 +8,7 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
 import PatientController from '../controllers/patient.ctl';
+import { check, validationResult } from 'express-validator';
 import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
 const router = express.Router();
 const patients = new PatientController();

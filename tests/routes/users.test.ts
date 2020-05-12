@@ -79,7 +79,7 @@ describe('Testing User Routes', () => {
   it('Requests require auth by token', async () => {
 
     const res = await request(app)
-      .get('/patient')
+      .get('/patient/profile')
 
     expect(res.status).toEqual(401)
 
@@ -87,7 +87,7 @@ describe('Testing User Routes', () => {
 
   it('There is one registered user', async () => {
     const res = await request(app)
-      .get('/patient')
+      .get('/patient/profile')
       .set('Authorization', `Bearer ${token}`)
 
     expect(res.status).toEqual(200)

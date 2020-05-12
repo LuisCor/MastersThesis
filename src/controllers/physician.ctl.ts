@@ -2,8 +2,6 @@ import Physicians, { PhysicianInterface } from "../schemas/PhysicianSchema";
 import Patients, { PatientInterface, PatientLoginInterface } from "../schemas/PatientSchema";
 import mongoose, { Mongoose, Model } from "mongoose";
 
-//TODO : This class
-
 
 export default class PhysicianController {
 
