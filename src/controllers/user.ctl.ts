@@ -1,4 +1,3 @@
-import Users, { UserInterface, UserLoginInterface } from "../schemas/UsersSchema";
 import Patients, { PatientInterface } from "../schemas/PatientSchema";
 import Physicians, { PhysicianInterface } from "../schemas/PhysicianSchema";
 import nodemailer from "nodemailer"
@@ -28,27 +27,6 @@ export default class UserController {
         });
     };
 
-
-    public listWithRole(searchRole: string) {
-        return new Promise((resolve, reject) => {
-            Users.find({ role: searchRole }, (err: any, data: any) => {
-                if (err)
-                    return reject(err);
-                return resolve(data);
-            });
-        });
-    };
-
-
-    public profileInfo(username: string) {
-        return new Promise((resolve, reject) => {
-            Users.find({ username: username }, (err: any, data: any) => {
-                if (err)
-                    return reject(err);
-                return resolve(data);
-            });
-        });
-    };
 
     public async recoverPassword(req: any, res: any) {
 

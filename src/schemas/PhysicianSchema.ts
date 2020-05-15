@@ -15,11 +15,12 @@ export interface PhysicianInterface extends mongoose.Document {
     name: string,
     password: string,
     role: string,
-    specialty: string,
-    gender: string,
     birthDate: string,
+    gender: string,
+    phoneNumber: string,
+    
+    specialty: string,
     physicianID: string
-    phoneNumber: number,
 
     patients: Array<mongoose.Schema.Types.ObjectId>
 
@@ -38,7 +39,7 @@ export const PhysicianSchema = new mongoose.Schema(
         gender: { type: String, required: true },
         birthDate: { type: String, required: true },
         physicianID: { type: String, required: true },
-        phoneNumber: { type: Number, required: true },
+        phoneNumber: { type: String, required: true },
 
         patients: [{ type: Schema.Types.ObjectId, ref: 'Patients' }]
     }

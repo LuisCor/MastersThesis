@@ -1,9 +1,19 @@
 import passport from "passport";
+import {Response, Request} from "express";
+import mongoose from "mongoose";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JWTstrategy } from "passport-jwt";
 import { ExtractJwt } from "passport-jwt";
 import Patients, { PatientInterface } from "../schemas/PatientSchema";
 import Physicians, { PhysicianInterface } from "../schemas/PhysicianSchema";
+
+
+export interface UserRequest extends Request {
+    user : {
+        _id : mongoose.Schema.Types.ObjectId,
+        role : string
+    }
+}
 
 //Create a passport middleware to handle user registration
 passport.use('signup', new LocalStrategy({

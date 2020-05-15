@@ -16,13 +16,13 @@ export interface PatientInterface extends mongoose.Document {
     password: string,
     role: string,
     birthDate: string,
+    gender: string,
+    phoneNumber: string,
     address: string,
     identificationNum: string,
     fiscalNumber: number,
 
     job: string,
-    gender: string,
-    phoneNumber: number,
     healthSystem: string,
     healthSystemNum: string,
 
@@ -41,13 +41,13 @@ export const PatientSchema = new mongoose.Schema(
         password: { type: String, required: true },
         role: { type: String, required: true },
         birthDate: { type: String, required: true },
+        gender: { type: String, required: false },
+        phoneNumber: { type: String, required: false },
         address: { type: String, required: true },
         identificationNum: { type: String, required: true, unique: true },
         fiscalNumber: { type: Number, required: true, unique: true },
 
         job: { type: String, required: false },
-        gender: { type: String, required: false },
-        phoneNumber: { type: Number, required: false },
         healthSystem: { type: String, required: false },
         healthSystemNum: { type: String, required: false },
 

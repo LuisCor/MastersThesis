@@ -3,13 +3,12 @@
 //  These functions are responsible for receiving and interpreting the incomming requests
 //  and produce appropriate responses based on other system functions
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
 import UserController from '../controllers/user.ctl';
-import { check, validationResult } from 'express-validator';
-import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
+import { check, validationResult, param } from 'express-validator';
 const router = express.Router();
 const users = new UserController();
 
@@ -47,8 +46,11 @@ router.post("/", [
   check('email').normalizeEmail().isEmail(),
   check('password').isLength({ min: 5 }),
   check('name').escape(),
-  check('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN"))
-], (req: any, res: any, next: any) => {
+  check('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN")),
+  check('birthDate').isISO8601(),
+  check('gender').escape(),
+  check('phoneNumber').isMobilePhone("pt-PT")
+], (req: Request, res: Response, next: any) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty())
@@ -76,7 +78,15 @@ router.post("/", [
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/login", (req, res, next) => {
+router.post("/login", [
+  check('email').normalizeEmail().isEmail(),
+  check('password').isLength({ min: 5 })
+], (req: Request, res: Response, next: any) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(422).json({ errors: errors.array() });
+
 
   passport.authenticate('login', async (err, user, info) => {
     try {
@@ -131,6 +141,9 @@ router.get("/recoverPassword", users.recoverPassword)
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/resetPassword/:role/:token", users.resetPassword)
+router.post("/resetPassword/:role/:token", [
+  param('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN")),
+  param('token').escape()
+], users.resetPassword)
 
 export default router;

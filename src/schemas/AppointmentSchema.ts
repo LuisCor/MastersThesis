@@ -9,7 +9,7 @@ export interface AppointmentInterface extends mongoose.Document {
     startDate: Date,
     endDate: Date,
     location: string,
-    status: string, //REQUESTED, DENIED, ACCEPTED
+    status: string, //REQUESTED, ACCEPTED, REJECTED
     physician: mongoose.Schema.Types.ObjectId,
     patient: mongoose.Schema.Types.ObjectId
 
