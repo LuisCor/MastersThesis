@@ -12,7 +12,6 @@ import { check, validationResult, param } from 'express-validator';
 const router = express.Router();
 const users = new UserController();
 
-
 /**
  * @typedef LoginInfo
  * @property {string} username
@@ -30,41 +29,6 @@ const users = new UserController();
  * @property {string} phone
  */
 
-/**
- * Creates a new user in the system
- * 
- * @route POST /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
- * @produces application/json application/xml
- * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
- * @returns {string}  500 - Unexpected error
- */
-router.post("/", [
-  check('email').normalizeEmail().isEmail(),
-  check('password').isLength({ min: 5 }),
-  check('name').escape(),
-  check('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN")),
-  check('birthDate').isISO8601(),
-  check('gender').escape(),
-  check('phoneNumber').isMobilePhone("pt-PT")
-], (req: Request, res: Response, next: any) => {
-
-  const errors = validationResult(req);
-  if (!errors.isEmpty())
-    return res.status(422).json({ errors: errors.array() });
-
-  passport.authenticate('signup', { session: false }, async (err, user, info) => {
-    if (err) {
-      return res.status(400).send({ message: err })
-    }
-    else
-      return res.status(200).send(user)
-  })(req, res, next);
-
-});
 
 /**
  * Creates a new user in the system
@@ -97,10 +61,13 @@ router.post("/login", [
       req.login(user, { session: false }, async (error) => {
         if (error) return next(error)
 
-        const body = {
+
+        let body = {
           _id: user._id,
-          role: user.role
-        };
+          role: user.role,
+        } as any;
+        if(body.role == "PHYSICIAN")
+          body = {...body, specialty : user.specialty}
 
         const token = jwt.sign({
           user: body

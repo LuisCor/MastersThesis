@@ -22,7 +22,8 @@ import Users from './routes/users';
 import Admin from './routes/admin';
 import Physicians from "./routes/physicians";
 import Patients from "./routes/patients";
-import Appointments from "./routes/appointments"
+import Appointments from "./routes/appointments";
+import PatientEvals from "./routes/patientEvals";
 
 
 //  Assigning Routes
@@ -31,5 +32,6 @@ app.use('/admin', Admin);
 app.use('/physician', Physicians);
 app.use('/patient', Patients);
 app.use('/appointment', Appointments);
+app.use('/patientEval', PatientEvals);
 
 export default app;

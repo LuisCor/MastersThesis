@@ -49,9 +49,9 @@ export default class PhysicianController {
         //   if successful also update the patient's list of physicians
         try {
             //Note: This is an update and not a "find() -> modify -> save()" because save recreates the documento rewriting other attributes, messing things up
-            const phydoc = await Physicians.update({ _id: physicianID }, { $push: { patients: patientID as mongoose.Schema.Types.ObjectId } });
+            const phydoc = await Physicians.update({ _id: physicianID }, { $push: { patients: patientID as unknown as mongoose.Schema.Types.ObjectId } });
             if (phydoc.nModified > 0) {
-                const patdoc = await Patients.update({ _id: patientID }, { $push: { physicians: physicianID as mongoose.Schema.Types.ObjectId } });
+                const patdoc = await Patients.update({ _id: patientID }, { $push: { physicians: physicianID as unknown as mongoose.Schema.Types.ObjectId } });
                 if (phydoc.nModified !== patdoc.nModified)
                     return res.status(500).send({ error: "Database has become inconsistent" })
                 //This is serious and should never happen
@@ -104,14 +104,13 @@ export default class PhysicianController {
                 {
                     $lookup:
                     {
-                        from: "patients",
-                        localField: "patients",
-                        foreignField: "_id",
-                        as: "patients_info"
+                        from: "patients", // Other Collection
+                        localField: "patients", // Name of the key to be aggregated with the other collection
+                        foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "patients_info"     // Name of the resulting collection from the aggregation
                     }    
                 }
             ]).exec();
-            console.log(patients)
 
             return res.status(200).send({ patients })
 

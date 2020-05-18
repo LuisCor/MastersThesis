@@ -10,6 +10,12 @@ export interface AppointmentInterface extends mongoose.Document {
     endDate: Date,
     location: string,
     status: string, //REQUESTED, ACCEPTED, REJECTED
+
+    summary: string,
+    patientEval : mongoose.Schema.Types.ObjectId,
+    // TODO physioEval : mongoose.Schema.Types.ObjectId,
+
+
     physician: mongoose.Schema.Types.ObjectId,
     patient: mongoose.Schema.Types.ObjectId
 
@@ -23,9 +29,14 @@ export const AppointmentSchema = new mongoose.Schema(
         endDate: { type: Date, required: true },
         location: { type: String, required: true },
         status: { type: String, required: true },
+        summary: { type: String},
+        patientEval : {type: Schema.Types.ObjectId},
+        // TODO physioEval : {type: Schema.Types.ObjectId},
+
         //Patients and physicians are indexed to optimize searches since the most common queries for this 
         //  Schema are going to be filtered by these atributes  
         // Ex: Get Physician's X next appointments  or Does Patient X have appointment at time Y 
+        
         physician: { type: Schema.Types.ObjectId, required: true, index : true },
         patient: { type: Schema.Types.ObjectId, required: true , index : true }
 

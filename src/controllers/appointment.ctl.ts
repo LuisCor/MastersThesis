@@ -55,7 +55,7 @@ export default class AppointmentSchema {
                     patient: req.user._id,
                     startDate: { $gte: startDate, $lt: endDate }
                 })
-                
+
 
             if (req.user.role === "PHYSICIAN")
                 foundAppoints = await Appointments.find({
@@ -80,40 +80,40 @@ export default class AppointmentSchema {
 
         let foundAppoints;
         let order = '-startDate'; //Default order descending
-                
-        if(req.query.order === "ascending")
+
+        if (req.query.order === "ascending")
             order = '+startDate'
-        else if(req.query.order === "descending")
+        else if (req.query.order === "descending")
             order = '-startDate'
 
 
         //Setup query components
-        let patient = { patient: req.user._id }; 
+        let patient = { patient: req.user._id };
         let physician = { physician: req.user._id };
-        let startDate = { startDate: {$lte: req.query.last}};
+        let startDate = { startDate: { $lte: req.query.last } };
 
         try {
             //Identify which type of user is requesting and proceed
             if (req.user.role === "PATIENT") {
                 //Setup query with it's components
-                let query = {...patient}
-                if(req.query.last)
-                    query = {...patient, ...startDate}
-                
+                let query = { ...patient }
+                if (req.query.last)
+                    query = { ...patient, ...startDate }
+
                 foundAppoints = await Appointments.find(query)
-                .limit( 3 )
-                .sort( order );
+                    .limit(3)
+                    .sort(order);
             }
 
-            if (req.user.role === "PHYSICIAN"){
+            if (req.user.role === "PHYSICIAN") {
                 //Setup query with it's components
-                let query = {...physician}
-                if(req.query.last)
-                    query = {...physician, ...startDate}
-                
+                let query = { ...physician }
+                if (req.query.last)
+                    query = { ...physician, ...startDate }
+
                 foundAppoints = await Appointments.find(query)
-                .limit( 3 )
-                .sort( order );
+                    .limit(3)
+                    .sort(order);
             }
 
             return res.status(200).send(foundAppoints)
@@ -191,12 +191,38 @@ export default class AppointmentSchema {
     public async patientAppointments(request: Request, res: Response) {
         const req = request as UserRequest;
         try {
-            const appoint = await Appointments.find({ 
+            const appoint = await Appointments.find({
                 physician: req.user._id,
                 patient: req.params.patientID as unknown as mongoose.Schema.Types.ObjectId
-             });
+            });
 
             return res.status(200).send(appoint);
+        } catch (error) {
+            return res.status(400).send({ error: "An error occured " + error })
+        }
+    }
+
+    public async addPatientEval(request: Request, res: Response) {
+        const req = request as UserRequest;
+        try {
+            const appoint = await Appointments.update({ _id: req.params.appointID }, { patientEval: req.params.evalID as unknown as mongoose.Schema.Types.ObjectId });
+            if (appoint.nModified > 0)
+                return res.status(200).send({ message: "Patient Evaluation added to Appointment" });
+            else
+                return res.status(400).send({ error: "Appointment does not exist"})
+        } catch (error) {
+            return res.status(400).send({ error: "An error occured " + error })
+        }
+    }
+
+    public async removePatientEval(request: Request, res: Response) {
+        const req = request as UserRequest;
+        try {
+            const appoint = await Appointments.update({ _id: req.params.appointID }, { patientEval: undefined });
+            if (appoint.nModified > 0)
+                return res.status(200).send({ message: "Patient Evaluation removed from Appointment" });
+            else
+                return res.status(400).send({ error: "Appointment does not exist"})
         } catch (error) {
             return res.status(400).send({ error: "An error occured " + error })
         }

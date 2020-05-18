@@ -17,17 +17,6 @@ export default class UserController {
 
     }
 
-    public listUsers() {
-        return new Promise((resolve, reject) => {
-            Patients.find((err: any, data: any) => {
-                if (err)
-                    return reject(err);
-                return resolve(data);
-            });
-        });
-    };
-
-
     public async recoverPassword(req: any, res: any) {
 
         let user: any; //Check the type of this var, it's the result from mongoose.findOne so in therory it's a DocumentQuery

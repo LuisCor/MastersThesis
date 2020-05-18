@@ -1,6 +1,8 @@
-import mongoose from "mongoose";
+import mongoose, { connect } from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { PhysicianRequest } from "../auth/auth";
+import { Request } from "express";
 const Schema = mongoose.Schema;
 
 export interface PhysicianLoginInterface {
@@ -15,11 +17,12 @@ export interface PhysicianInterface extends mongoose.Document {
     name: string,
     password: string,
     role: string,
+    specialty: string,
+
     birthDate: string,
     gender: string,
     phoneNumber: string,
-    
-    specialty: string,
+
     physicianID: string
 
     patients: Array<mongoose.Schema.Types.ObjectId>
@@ -36,10 +39,13 @@ export const PhysicianSchema = new mongoose.Schema(
         name: { type: String, required: true },
         password: { type: String, required: true },
         role: { type: String, required: true },
-        gender: { type: String, required: true },
+        specialty: [{ type: String, enum: ["PHYSIOTHERAPIST", "PHYSIATRIST"], required: true }],
+
         birthDate: { type: String, required: true },
-        physicianID: { type: String, required: true },
+        gender: { type: String, required: true },
         phoneNumber: { type: String, required: true },
+
+        physicianID: { type: String, required: true, unique: true },
 
         patients: [{ type: Schema.Types.ObjectId, ref: 'Patients' }]
     }
@@ -92,6 +98,36 @@ PhysicianSchema.methods.generatePasswordReset = function () {
     this.passwordRecoveryExpires = Date.now() + 1800000; //expires in half an hour
 };
 
+export function specialtyAuthorization(specialties: Array<String>) {
+    return function (request: Request, res: any, next: any) {
+        //Request at this point comes from passport.authenticate so it's the object
+        // "user" : {_id:--, role: --}
+        let req = request as PhysicianRequest;
+        let user = req.user;
+
+        if(user.role !== "PHYSICIAN")
+            next();
+
+        if (!user.specialty)
+            return res.status(401).send({ error: "Specialty not provided" })
+
+
+        for (let i = 0; i < user.specialty.length; i++) {
+                switch (user.specialty[i]) {
+                    case "PHYSIOTHERAPIST":
+                        if (specialties.indexOf("PHYSIOTHERAPIST") > -1)
+                            return next();
+                        break;
+                    case "PHYSIATRIST":
+                        if (specialties.indexOf("PHYSIATRIST") > -1)
+                            return next();
+                        break;
+                }
+        }
+
+        return res.status(401).send({ error: "Not Authorized to Create/View content" })
+    }
+}
 
 const Physicians = mongoose.model<PhysicianInterface>('Physicians', PhysicianSchema);
 export default Physicians;

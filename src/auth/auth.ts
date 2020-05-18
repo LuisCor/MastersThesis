@@ -1,5 +1,5 @@
 import passport from "passport";
-import {Response, Request} from "express";
+import { Response, Request } from "express";
 import mongoose from "mongoose";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JWTstrategy } from "passport-jwt";
@@ -9,9 +9,24 @@ import Physicians, { PhysicianInterface } from "../schemas/PhysicianSchema";
 
 
 export interface UserRequest extends Request {
-    user : {
-        _id : mongoose.Schema.Types.ObjectId,
-        role : string
+    user: {
+        _id: mongoose.Schema.Types.ObjectId,
+        role: string
+    }
+}
+
+export interface PatientRequest extends Request {
+    user: {
+        _id: mongoose.Schema.Types.ObjectId,
+        role: string
+    }
+}
+
+export interface PhysicianRequest extends Request {
+    user: {
+        _id: mongoose.Schema.Types.ObjectId,
+        role: string,
+        specialty: Array<string>
     }
 }
 
@@ -54,10 +69,13 @@ passport.use('signup', new LocalStrategy({
                 password,
                 name: req.body.name,
                 role: "PHYSICIAN",
-                gender: req.body.gender,
+                specialty: req.body.specialty,
+
                 birthDate: req.body.birthDate,
-                physicianID: req.body.physicianID,
-                phoneNumber: req.body.phoneNumber
+                gender: req.body.gender,
+                phoneNumber: req.body.phoneNumber,
+                physicianID: req.body.physicianID
+
 
             } as PhysicianInterface);
 
@@ -83,12 +101,12 @@ passport.use('login', new LocalStrategy({
 
         let user;
 
-        if(req.query.role === "PHYSICIAN") {
+        if (req.query.role === "PHYSICIAN") {
             user = await Physicians.findOne({ email: username });
 
             if (!user)
                 return done(null, false, { message: 'Physician not found' });
-                
+
         } else if (req.query.role === "PATIENT") {
             user = await Patients.findOne({ email: username });
 
@@ -98,7 +116,7 @@ passport.use('login', new LocalStrategy({
         } else
             return done(null, false, { message: 'User login error' });
 
-        
+
         const validate = await user.isValidPassword(password);
         if (!validate)
             return done(null, false, { message: 'Wrong Password' });
@@ -200,3 +218,6 @@ export function roleAuthorization(roles: Array<String>) {
 
     }
 }
+
+
+
