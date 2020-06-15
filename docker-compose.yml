@@ -34,6 +34,18 @@ services:
         aliases:
           - phyrem-backend
 
+  # phyrem-frontend:
+  #   container_name: phyrem-frontend
+  #   restart: always
+  #   build: ../PhyRem_FE
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     phyrem_net:
+  #       ipv4_address: 172.30.1.4
+  #       aliases:
+  #         - phyrem-frontend
+
   phyrem-docs:
     image: redocly/redoc
     container_name: phyrem-docs

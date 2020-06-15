@@ -27,11 +27,11 @@ import PatientEvals from "./routes/patientEvals";
 
 
 //  Assigning Routes
-app.use('/', Users);
-app.use('/admin', Admin);
-app.use('/physician', Physicians);
-app.use('/patient', Patients);
-app.use('/appointment', Appointments);
-app.use('/patientEval', PatientEvals);
+app.use('/api/', Users);
+app.use('/api/admin', Admin);
+app.use('/api/physician', Physicians);
+app.use('/api/patient', Patients);
+app.use('/api/appointment', Appointments);
+app.use('/api/patientEval', PatientEvals);
 
 export default app;

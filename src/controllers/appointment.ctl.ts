@@ -1,4 +1,4 @@
-import Appointments from "../schemas/AppointmentSchema";
+import Appointments, { AppointmentInterface } from "../schemas/AppointmentSchema";
 import { Request, Response } from 'express';
 import { UserRequest } from "../auth/auth"
 import mongoose, { connect, Query } from "mongoose";
@@ -11,6 +11,7 @@ export default class AppointmentSchema {
     }
 
 
+    
     ////// APPOINTMENT METHOD FOR ALL USERS
 
     public async getTodaysAppointments(request: Request, res: Response) {
@@ -24,18 +25,102 @@ export default class AppointmentSchema {
 
         try {
             if (req.user.role === "PATIENT")
-                foundAppoints = await Appointments.find({
-                    patient: req.user._id,
-                    startDate: { $gte: todayStart, $lt: todayEnd }
-                });
+                foundAppoints = await Appointments.aggregate([
+                    {
+                        $match: {
+                            physician: new mongoose.Types.ObjectId(req.user._id as any),
+                            startDate: { $gte: todayStart, $lt: todayEnd }
+                        },
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: "physicians", // Other Collection
+                            localField: "physician", // Name of the key to be aggregated with the other collection
+                            foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                            as: "patientsInfo"     // Name of the resulting collection from the aggregation
+                        }
+                    },
+                    {
+                        //Remove the fields from the aggregation
+                        $project: {
+                            "__v": 0,
+                            "patientsInfo._id": 0,
+                            "patientsInfo.password": 0,
+                            "patientsInfo.identificationNum": 0,
+                            "patientsInfo.fiscalNumber": 0,
+                            "patientsInfo.job": 0,
+                            "patientsInfo.healthSystem": 0,
+                            "patientsInfo.healthSystemNum": 0,
+                            "patientsInfo.physicians": 0,
+                            "patientsInfo.__v": 0,
+
+                        }
+
+                    }
+                ]).exec();
 
             if (req.user.role === "PHYSICIAN")
-                foundAppoints = await Appointments.find({
-                    patient: req.user._id,
-                    startDate: { $gte: todayStart, $lt: todayEnd }
-                });
 
-            return res.status(200).send(foundAppoints)
+                foundAppoints = await Appointments.aggregate([
+                    {
+                        $match: {
+                            physician: new mongoose.Types.ObjectId(req.user._id as any),
+                            startDate: { $gte: todayStart, $lt: todayEnd }
+                        },
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: "patients", // Other Collection
+                            localField: "patient", // Name of the key to be aggregated with the other collection
+                            foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                            as: "patientsInfo"     // Name of the resulting collection from the aggregation
+                        }
+                    },
+                    {
+                        //Remove the fields from the aggregation
+                        $project: {
+                            "__v": 0,
+                            "patientsInfo._id": 0,
+                            "patientsInfo.password": 0,
+                            "patientsInfo.identificationNum": 0,
+                            "patientsInfo.fiscalNumber": 0,
+                            "patientsInfo.job": 0,
+                            "patientsInfo.healthSystem": 0,
+                            "patientsInfo.healthSystemNum": 0,
+                            "patientsInfo.physicians": 0,
+                            "patientsInfo.__v": 0,
+
+                        }
+
+                    }
+                ]).exec();
+
+
+
+            let normalizedAppoints = foundAppoints.map((value: any, index: number) => {
+                return {
+                    ...value,
+                    patientsInfo: value.patientsInfo.pop()
+                }
+            })
+
+            const compareAppointments = (a: AppointmentInterface, b: AppointmentInterface) => {
+                if (a.startDate < b.startDate) {
+                    return -1;
+                }
+                if (a.startDate > b.startDate) {
+                    return 1;
+                }
+                return 0;
+            }
+        
+
+            normalizedAppoints.sort(compareAppointments)
+
+
+            return res.status(200).send(normalizedAppoints)
         } catch (error) {
             return res.status(400).send({ error: "An error occured " + error })
         }
@@ -48,6 +133,9 @@ export default class AppointmentSchema {
         let startDate = new Date(req.query.startDate as string)
         let endDate = new Date(req.query.endDate as string)
 
+        if (startDate.getTime() > endDate.getTime())
+            return res.status(400).send({ error: "startDate cannot be after endDate" })
+
 
         try {
             if (req.user.role === "PATIENT")
@@ -57,13 +145,55 @@ export default class AppointmentSchema {
                 })
 
 
-            if (req.user.role === "PHYSICIAN")
-                foundAppoints = await Appointments.find({
-                    patient: req.user._id,
-                    startDate: { $gte: startDate, $lt: endDate }
-                });
+            if (req.user.role === "PHYSICIAN") {
+                foundAppoints = await Appointments.aggregate([
+                    {
+                        $match: {
+                            physician: new mongoose.Types.ObjectId(req.user._id as any),
+                            startDate: { $gte: startDate, $lt: endDate }
+                        },
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: "patients", // Other Collection
+                            localField: "patient", // Name of the key to be aggregated with the other collection
+                            foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                            as: "patientsInfo"     // Name of the resulting collection from the aggregation
+                        }
+                    },
+                    {
+                        //Remove the fields from the aggregation
+                        $project: {
+                            "__v": 0,
+                            "patientsInfo._id": 0,
+                            "patientsInfo.password": 0,
+                            "patientsInfo.identificationNum": 0,
+                            "patientsInfo.fiscalNumber": 0,
+                            "patientsInfo.job": 0,
+                            "patientsInfo.healthSystem": 0,
+                            "patientsInfo.healthSystemNum": 0,
+                            "patientsInfo.physicians": 0,
+                            "patientsInfo.__v": 0,
 
-            return res.status(200).send(foundAppoints)
+                        }
+
+                    }
+                ]).exec();
+                // foundAppoints = await Appointments.find({
+                //     physician: req.user._id,
+                //     startDate: { $gte: startDate, $lt: endDate }
+                // });
+            }
+
+            let normalizedAppoints = foundAppoints.map((value: any, index: number) => {
+                return {
+                    ...value,
+                    patientsInfo: value.patientsInfo.pop()
+                }
+            })
+
+            return res.status(200).send(normalizedAppoints)
         } catch (error) {
             return res.status(400).send({ error: "An error occured " + error })
         }
@@ -168,7 +298,7 @@ export default class AppointmentSchema {
     public async acceptAppoint(request: Request, res: Response) {
         const req = request as UserRequest;
         try {
-            const appoint = await Appointments.findByIdAndUpdate({ _id: req.params.appointID, physician: req.user._id }, { status: "ACCEPT" });
+            const appoint = await Appointments.findByIdAndUpdate({ _id: req.params.appointID, physician: req.user._id }, { status: "ACCEPTED" });
 
             return res.status(200).send(appoint);
         } catch (error) {
@@ -209,7 +339,7 @@ export default class AppointmentSchema {
             if (appoint.nModified > 0)
                 return res.status(200).send({ message: "Patient Evaluation added to Appointment" });
             else
-                return res.status(400).send({ error: "Appointment does not exist"})
+                return res.status(400).send({ error: "Appointment does not exist" })
         } catch (error) {
             return res.status(400).send({ error: "An error occured " + error })
         }
@@ -222,7 +352,7 @@ export default class AppointmentSchema {
             if (appoint.nModified > 0)
                 return res.status(200).send({ message: "Patient Evaluation removed from Appointment" });
             else
-                return res.status(400).send({ error: "Appointment does not exist"})
+                return res.status(400).send({ error: "Appointment does not exist" })
         } catch (error) {
             return res.status(400).send({ error: "An error occured " + error })
         }

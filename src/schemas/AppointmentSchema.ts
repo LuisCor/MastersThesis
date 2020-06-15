@@ -15,6 +15,9 @@ export interface AppointmentInterface extends mongoose.Document {
     patientEval : mongoose.Schema.Types.ObjectId,
     // TODO physioEval : mongoose.Schema.Types.ObjectId,
 
+    objective : string,
+    diagnostic : string,
+    treatment : string,
 
     physician: mongoose.Schema.Types.ObjectId,
     patient: mongoose.Schema.Types.ObjectId
@@ -32,6 +35,12 @@ export const AppointmentSchema = new mongoose.Schema(
         summary: { type: String},
         patientEval : {type: Schema.Types.ObjectId},
         // TODO physioEval : {type: Schema.Types.ObjectId},
+
+        objective : { type: String, required: true },
+        diagnostic : { type: String, required: false },
+        treatment : { type: String, required: false },
+    
+    
 
         //Patients and physicians are indexed to optimize searches since the most common queries for this 
         //  Schema are going to be filtered by these atributes  
