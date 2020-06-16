@@ -48,6 +48,12 @@ export default class PhysicianController {
         // Attempt to update the physician's list of patient's under care
         //   if successful also update the patient's list of physicians
         try {
+            const physician = await Physicians.findById(physicianID)
+
+            //Verify patient isn't already adopted
+            if (physician?.patients.indexOf(patientID as any) !== -1)
+                return res.status(400).send({ error: "Patient is already adopted" });
+
             //Note: This is an update and not a "find() -> modify -> save()" because save recreates the documento rewriting other attributes, messing things up
             const phydoc = await Physicians.update({ _id: physicianID }, { $push: { patients: patientID as unknown as mongoose.Schema.Types.ObjectId } });
             if (phydoc.nModified > 0) {
@@ -58,8 +64,7 @@ export default class PhysicianController {
                 else
                     return res.status(200).send({ message: "Patient adopted" })
             }
-            else
-                return res.status(400).send({ error: "Patient is already adopted" });
+            
         } catch (err) {
             console.log(err)
             return res.status(400).send({ error: "Patient could not be adopted: \n" + err });
@@ -102,17 +107,48 @@ export default class PhysicianController {
         try {
             const patients = await Physicians.aggregate([
                 {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(physicianID as any),
+                    }
+                },
+                {
+
                     $lookup:
                     {
                         from: "patients", // Other Collection
                         localField: "patients", // Name of the key to be aggregated with the other collection
                         foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
-                        as: "patients_info"     // Name of the resulting collection from the aggregation
-                    }    
+                        as: "patientsInfo"     // Name of the resulting collection from the aggregation
+                    },
+                },
+                {
+
+                    //Remove the fields from the aggregation
+                    $project: {
+                        "_id": 0,
+                        "specialty": 0,
+                        "patients": 0,
+                        "email": 0,
+                        "password": 0,
+                        "name": 0,
+                        "role": 0,
+                        "birthDate": 0,
+                        "gender": 0,
+                        "phoneNumber": 0,
+                        "physicianID": 0,
+                        "__v": 0,
+                        "patientsInfo.password": 0,
+                        "patientsInfo.__v": 0,
+                    }
                 }
             ]).exec();
 
-            return res.status(200).send({ patients })
+
+            const filteredPatients = patients.map((value: any, index: number) => {
+                return value.patientsInfo
+            })
+
+            return res.status(200).send(filteredPatients.pop())
 
         } catch (err) {
             console.log(err)
