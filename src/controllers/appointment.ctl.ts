@@ -3,6 +3,10 @@ import { Request, Response } from 'express';
 import { UserRequest } from "../auth/auth"
 import mongoose, { connect, Query } from "mongoose";
 import Performance from "perf_hooks"
+import Patients from "../schemas/PatientSchema";
+import Physicians from "../schemas/PhysicianSchema";
+import { PatientInterface } from "../schemas/PatientSchema";
+import { PhysicianInterface } from "../schemas/PhysicianSchema";
 
 export default class AppointmentSchema {
 
@@ -11,7 +15,7 @@ export default class AppointmentSchema {
     }
 
 
-    
+
     ////// APPOINTMENT METHOD FOR ALL USERS
 
     public async getTodaysAppointments(request: Request, res: Response) {
@@ -115,7 +119,7 @@ export default class AppointmentSchema {
                 }
                 return 0;
             }
-        
+
 
             normalizedAppoints.sort(compareAppointments)
 
@@ -166,7 +170,6 @@ export default class AppointmentSchema {
                         //Remove the fields from the aggregation
                         $project: {
                             "__v": 0,
-                            "patientsInfo._id": 0,
                             "patientsInfo.password": 0,
                             "patientsInfo.identificationNum": 0,
                             "patientsInfo.fiscalNumber": 0,
@@ -255,20 +258,33 @@ export default class AppointmentSchema {
 
     public async createAppointment(request: Request, res: Response) {
         const req = request as UserRequest;
+        let patient : PatientInterface | null = null;
+        let physician: PhysicianInterface | null = null;
         try {
             //When a patient registers an appointment it should be a REQUEST
             if (req.user.role === "PATIENT") {
                 req.body.patient = req.user._id;
                 req.body.status = "REQUESTED";
+                patient = await Patients.findById(req.body.patient, '-password -__v -physicians')
+                physician = await Physicians.findById(req.body.physician, '-password -__v -patients')
             }
             //When a physician registers an appointment 
             if (req.user.role === "PHYSICIAN") {
                 req.body.physician = req.user._id;
                 req.body.status = "ACCEPTED";
+                patient = await Patients.findById(req.body.patient, '-password -__v -physicians')
+                physician = await Physicians.findById(req.body.physician, '-password -__v -patients')
             }
 
             const appointment = await Appointments.create(req.body);
-            return res.status(200).send({ appointmentID: appointment._id })
+
+            return res.status(200).send(
+                {
+                    ...(appointment as any)._doc,
+                    patientsInfo: patient,
+                    physicianInfo: physician
+                }
+            )
         } catch (error) {
             return res.status(400).send({ error: "" + error })
         }

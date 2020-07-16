@@ -4,11 +4,10 @@ import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
 import PatientController from '../controllers/patient.ctl';
 import { check, validationResult } from 'express-validator';
-import PatientEvalController from '../controllers/patientEval.ctl';
+import PhysioEvalController from '../controllers/physioEval.ctl';
 import { specialtyAuthorization } from '../schemas/PhysicianSchema';
 const router = express.Router();
-const patientEvals = new PatientEvalController();
-
+const physioEvals = new PhysioEvalController();
 
 /**
  * @typedef UserInfo
@@ -36,8 +35,8 @@ const patientEvals = new PatientEvalController();
 router.post("/",
     passport.authenticate('jwt', { session: false }),
     roleAuthorization(['PHYSICIAN']),
-    specialtyAuthorization(['PHYSIATRIST']),
-    patientEvals.createPatientEval
+    specialtyAuthorization(['PHYSIATRIST', 'PHYSIOTHERAPIST']),
+    physioEvals.createPhysioEval
 );
 
 
@@ -57,27 +56,7 @@ router.get("/:patientID",
     passport.authenticate('jwt', { session: false }),
     roleAuthorization(['PHYSICIAN']),
     specialtyAuthorization(['PHYSIATRIST', 'PHYSIOTHERAPIST']),
-    patientEvals.listPatientEvals
-);
-
-
-/**
- * Assign a phisiotherapist to the evaluation
- * 
- * @route Get /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
- * @produces application/json application/xml
- * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
- * @returns {string}  500 - Unexpected error
- */
-router.post("/assign/:evalID/:physioID",
-    passport.authenticate('jwt', { session: false }),
-    roleAuthorization(['PHYSICIAN']),
-    specialtyAuthorization(['PHYSIATRIST']),
-    patientEvals.assignEvalToPhysio
+    physioEvals.listPhysioEvals
 );
 
 

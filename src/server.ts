@@ -1,5 +1,6 @@
 // Importing Dependencies
 import express from "express";
+import fileUpload from "express-fileupload"
 import cors from "cors";
 import bodyParser from "body-parser";
 import logger from "morgan";
@@ -16,6 +17,7 @@ app.use(passport.session());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(logger('dev'));
+app.use(fileUpload())
 
 // Importing routes
 import Users from './routes/users';
@@ -24,6 +26,8 @@ import Physicians from "./routes/physicians";
 import Patients from "./routes/patients";
 import Appointments from "./routes/appointments";
 import PatientEvals from "./routes/patientEvals";
+import PhysioEvals from "./routes/physioEvals";
+import Exercises from "./routes/exercises";
 
 
 //  Assigning Routes
@@ -33,5 +37,7 @@ app.use('/api/physician', Physicians);
 app.use('/api/patient', Patients);
 app.use('/api/appointment', Appointments);
 app.use('/api/patientEval', PatientEvals);
+app.use('/api/physioEval', PhysioEvals);
+app.use('/api/exercises', Exercises);
 
 export default app;

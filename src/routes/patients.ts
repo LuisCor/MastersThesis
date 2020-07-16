@@ -96,4 +96,42 @@ router.get("/profile", passport.authenticate('jwt', { session: false }), roleAut
  */
 router.post("/profile", passport.authenticate('jwt', { session: false }), roleAuthorization(['PATIENT']), patients.updateProfileInfo);
 
+
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/search",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    patients.getPatientByName
+);
+
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/:patientID",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    patients.getPatientInfoByID
+);
+
+
 export default router;

@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto"
+import Patients from "./PatientSchema";
+import Physicians from "./PhysicianSchema";
 const Schema = mongoose.Schema;
 
 // TS interface describing a Patient
@@ -12,12 +14,12 @@ export interface AppointmentInterface extends mongoose.Document {
     status: string, //REQUESTED, ACCEPTED, REJECTED
 
     summary: string,
-    patientEval : mongoose.Schema.Types.ObjectId,
+    patientEval: mongoose.Schema.Types.ObjectId,
     // TODO physioEval : mongoose.Schema.Types.ObjectId,
 
-    objective : string,
-    diagnostic : string,
-    treatment : string,
+    objective: string,
+    diagnostic: string,
+    treatment: string,
 
     physician: mongoose.Schema.Types.ObjectId,
     patient: mongoose.Schema.Types.ObjectId
@@ -32,22 +34,22 @@ export const AppointmentSchema = new mongoose.Schema(
         endDate: { type: Date, required: true },
         location: { type: String, required: true },
         status: { type: String, required: true },
-        summary: { type: String},
-        patientEval : {type: Schema.Types.ObjectId},
+        summary: { type: String },
+        patientEval: { type: Schema.Types.ObjectId },
         // TODO physioEval : {type: Schema.Types.ObjectId},
 
-        objective : { type: String, required: true },
-        diagnostic : { type: String, required: false },
-        treatment : { type: String, required: false },
-    
-    
+        objective: { type: String, required: true },
+        diagnostic: { type: String, required: false },
+        treatment: { type: String, required: false },
+
+
 
         //Patients and physicians are indexed to optimize searches since the most common queries for this 
         //  Schema are going to be filtered by these atributes  
         // Ex: Get Physician's X next appointments  or Does Patient X have appointment at time Y 
-        
-        physician: { type: Schema.Types.ObjectId, required: true, index : true },
-        patient: { type: Schema.Types.ObjectId, required: true , index : true }
+
+        physician: { type: Schema.Types.ObjectId, required: true, index: true },
+        patient: { type: Schema.Types.ObjectId, required: true, index: true }
 
     }
 );
@@ -64,6 +66,24 @@ AppointmentSchema.pre('validate', async function (next, data) {
     //  ------------|-------------------|--------------
     //             sD     |---C---|     eD
     //                   a.sD   a.eD
+
+    try {
+        const result = await Patients.findById(appointment.patient)
+        if (!result)
+            throw new Error
+    } catch (err) {
+        next(new Error("Patient does not exist"))
+    }
+
+
+    try {
+        console.log(appointment)
+        const result = await Physicians.findById(appointment.physician)
+        if (!result)
+            throw new Error
+    } catch (err) {
+        next(new Error("Physician does not exist"))
+    }
 
     try {
         const result = await Appointments.findOne({
@@ -108,7 +128,7 @@ AppointmentSchema.pre('validate', async function (next, data) {
 AppointmentSchema.pre('save', async function (next) {
 
     next();
-     
+
 });
 
 const Appointments = mongoose.model<AppointmentInterface>('Appointments', AppointmentSchema);
