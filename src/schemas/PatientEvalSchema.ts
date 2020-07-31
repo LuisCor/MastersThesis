@@ -9,46 +9,42 @@ export interface PatientEvalInterface extends mongoose.Document {
     creationDate: Date,
     physiatrist: mongoose.Schema.Types.ObjectId, //Physiatrist, 
     patient: mongoose.Schema.Types.ObjectId,
+
     clinicDiagnosis: string,
     description: string,
-    medicalPrescription: string,
-    numOfTreatments: string,
-    treatmentFrequency: string,
-    physiotherapists: Array<mongoose.Schema.Types.ObjectId>
+    medicalPrescription: PrescriptionInterface[]
+    //physiotherapists: Array<mongoose.Schema.Types.ObjectId>
 
 };
+
+export interface PrescriptionInterface extends mongoose.Document {
+    prescription: string,
+    prescriptionOption : string[],
+    numOfTreatments : number,
+    treatmentFreq : string
+}
+
 
 // Mongo Schema describing a User for the db
 export const PatientEvalSchema = new mongoose.Schema(
     {
 
         creationDate: { type: Date, required: true },
-        clinicDiagnosis: {
-            type: String,
-            enum: [
-                "Muscle Rupture",
-                "Tendinopathy",
-                "Sprain",
-                "Fracture",
-                "Neuropatic"
-            ], required: true
-        },
-        medicalPrescription: [{ type: String, required: true }], //Can have options limited with enum as well
-        numOfTreatments: { type: Number, required: true },
-        treatmentFrequency: {
-            type: String,
-            enum: [
-                "Daily",
-                "Weekly",
-                "Monthly"
-            ], required: true
-        }, //Review options 
-        description: { type: String, required: true },
-
         physiatrist: { type: Schema.Types.ObjectId, required: true, index: true },
         patient: { type: Schema.Types.ObjectId, required: true, index: true },
 
-        physiotherapists: [{ type: Schema.Types.ObjectId }]
+        clinicDiagnosis: { type: String, required: true},
+        description: { type: String, required: true },
+        medicalPrescription: [
+            {
+                prescription: { type: String},
+                prescriptionOption : [{ type: String}],
+                numOfTreatments : { type: Number},
+                treatmentFreq : { type: String }
+            }
+        ]
+
+        //physiotherapists: [{ type: Schema.Types.ObjectId }]
     }
 );
 

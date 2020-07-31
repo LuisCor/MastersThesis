@@ -24,6 +24,119 @@ export default class PatientEvalController {
         }
     }
 
+    public async listPhysicianEvals(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        try {
+            //const evals = await PatientEvals.find({ physiatrist: req.params.physicianID as unknown as mongoose.Schema.Types.ObjectId })
+
+            console.log(req.user._id)
+
+            let evals = await PatientEvals.aggregate([
+                {
+                    $match: {
+                        physiatrist: new mongoose.Types.ObjectId(req.user._id as any)
+                    },
+                },
+                {
+                    $lookup:
+                    {
+                        from: "patients", // Other Collection
+                        localField: "patient", // Name of the key to be aggregated with the other collection
+                        foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "patientsInfo"     // Name of the resulting collection from the aggregation
+                    }
+                },
+                {
+                    //Remove the fields from the aggregation
+                    $project: {
+                        "__v": 0,
+                        "patientsInfo.password": 0,
+                        "patientsInfo.identificationNum": 0,
+                        "patientsInfo.fiscalNumber": 0,
+                        "patientsInfo.job": 0,
+                        "patientsInfo.healthSystem": 0,
+                        "patientsInfo.healthSystemNum": 0,
+                        "patientsInfo.physicians": 0,
+                        "patientsInfo.__v": 0,
+                    }
+
+                }
+            ]).exec();
+
+
+            let normalizedEvals = evals.map((value: any, index: number) => {
+                let currentEval = value.patientsInfo.pop()
+                return {
+                    ...value,
+                    patientName: currentEval.name,
+                    patientEmail: currentEval.email
+                }
+            })
+
+
+            return res.status(200).send(normalizedEvals)
+        } catch (error) {
+            console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
+        }
+    }
+
+    public async getPatientEval(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        try {
+            const evals = await PatientEvals.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(req.params.patEvalID as any)
+                    },
+                },
+                {
+                    $lookup:
+                    {
+                        from: "patients", // Other Collection
+                        localField: "patient", // Name of the key to be aggregated with the other collection
+                        foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "patientsInfo"     // Name of the resulting collection from the aggregation
+                    }
+                },
+                {
+                    //Remove the fields from the aggregation
+                    $project: {
+                        "__v": 0,
+                        "patientsInfo.password": 0,
+                        "patientsInfo.identificationNum": 0,
+                        "patientsInfo.fiscalNumber": 0,
+                        "patientsInfo.job": 0,
+                        "patientsInfo.healthSystem": 0,
+                        "patientsInfo.healthSystemNum": 0,
+                        "patientsInfo.physicians": 0,
+                        "patientsInfo.__v": 0,
+                    }
+
+                }
+            ]).exec();
+
+
+            let normalizedEvals = evals.map((value: any, index: number) => {
+                let currentEval = value.patientsInfo.pop()
+                delete value.patientsInfo
+                let temp = {
+                    ...value,
+                    patientName: currentEval.name,
+                    patientEmail: currentEval.email
+                }
+                return temp
+            })
+
+
+            return res.status(200).send(normalizedEvals.pop())
+
+        } catch (error) {
+            console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
+        }
+    }
+
 
     public async createPatientEval(request: Request, res: Response) {
         const req = request as UserRequest;

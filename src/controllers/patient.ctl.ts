@@ -1,7 +1,7 @@
 import Patients, { PatientInterface, PatientLoginInterface } from "../schemas/PatientSchema";
+import mongoose from "mongoose";
 import { Request, Response } from "express"
 import { UserRequest } from "../auth/auth";
-//TODO : This class
 
 
 export default class PatientController {
@@ -80,6 +80,73 @@ export default class PatientController {
             }
         })
 
+    }
+
+
+    //METHOD NOT IMPLEMENTED YET
+    //Returns the patient's medical history
+    public async getPatientHistory(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        try {
+
+            const evals = await Patients.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(req.params.patientID as any)
+                    },
+                },
+                {
+                    $lookup:
+                    {
+                        from: "patientevals", // Other Collection
+                        localField: "_id", // Name of the key to be aggregated with the other collection
+                        foreignField: "patient",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "patientevals"     // Name of the resulting collection from the aggregation
+                    }
+                },
+                {
+                    $lookup:
+                    {
+                        from: "physioevals", // Other Collection
+                        localField: "_id", // Name of the key to be aggregated with the other collection
+                        foreignField: "patient",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "physioevals"     // Name of the resulting collection from the aggregation
+                    }
+                },
+                {
+                    $lookup:
+                    {
+                        from: "exercises", // Other Collection
+                        localField: "_id", // Name of the key to be aggregated with the other collection
+                        foreignField: "patient",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "exercises"     // Name of the resulting collection from the aggregation
+                    }
+                },
+                {
+                    //Remove the fields from the aggregation
+                    $project: {
+                        "_id": 1,
+                        "patientevals": 1,
+                        "physioevals": 1,
+                        "exercises": 1
+                    }
+
+                }
+            ]).exec();
+
+            //Aggregate returns an array since it does not know how many elements will be returned from the query,
+            //  however, since the query is done under the "_id" attribute, there should only be one element returned
+            //  A check will be done here for safety eventhough there are no conditions where this array can be larger then 1.
+
+            if(evals.length > 1)
+                throw new Error("Multiple users were found with the same id")
+            
+            return res.status(200).send(evals.pop())
+
+        } catch (error) {
+            console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
+        }
     }
 
 }
