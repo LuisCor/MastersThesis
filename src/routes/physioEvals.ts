@@ -60,4 +60,25 @@ router.get("/:patientID",
 );
 
 
+/**
+ * Get a Patient's patient evaluations
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/eval/:physioEvalID",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN', 'PATIENT']),
+    specialtyAuthorization(['PHYSIATRIST', 'PHYSIOTHERAPIST']),
+    physioEvals.getPhysioEval
+);
+
+
+
 export default router;

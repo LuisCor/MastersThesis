@@ -5,6 +5,7 @@ import PatientEvals from "../schemas/PatientEvalSchema";
 
 import { UserRequest } from "../auth/auth";
 import Patients from "../schemas/PatientSchema";
+import Physicians from "../schemas/PhysicianSchema";
 
 export default class PatientEvalController {
 
@@ -31,6 +32,11 @@ export default class PatientEvalController {
             //const evals = await PatientEvals.find({ physiatrist: req.params.physicianID as unknown as mongoose.Schema.Types.ObjectId })
 
             console.log(req.user._id)
+
+            const physician = await Physicians.findById(req.user._id)
+            if(!physician) {
+                throw Error("Physician with id: " + req.user._id + " does not exist")
+            }
 
             let evals = await PatientEvals.aggregate([
                 {
@@ -63,7 +69,6 @@ export default class PatientEvalController {
 
                 }
             ]).exec();
-
 
             let normalizedEvals = evals.map((value: any, index: number) => {
                 let currentEval = value.patientsInfo.pop()
@@ -117,6 +122,9 @@ export default class PatientEvalController {
                 }
             ]).exec();
 
+            if(evals.length === 0) {
+                throw Error("No evaluation found with id: " + req.params.physioEvalID)
+            }
 
             let normalizedEvals = evals.map((value: any, index: number) => {
                 let currentEval = value.patientsInfo.pop()
