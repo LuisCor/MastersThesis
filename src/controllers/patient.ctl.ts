@@ -2,11 +2,27 @@ import Patients, { PatientInterface, PatientLoginInterface } from "../schemas/Pa
 import mongoose from "mongoose";
 import { Request, Response } from "express"
 import { UserRequest } from "../auth/auth";
+import { UploadedFile } from "express-fileupload";
 
 
 export default class PatientController {
 
     constructor() {
+
+    }
+
+
+    public async getPatientInfo(req: any, res: any) {
+
+        await Patients.findById(req.user._id, '-password -__v', (err, patient) => {
+            if (err)
+                return res.status(400).send({ error: "Could not retrieve patient information" + err });
+            if (patient === undefined)
+                return res.status(400).send({ error: "Patient " + req.user._id + " not found" });
+            else {
+                return res.status(200).send(patient);
+            }
+        })
 
     }
 
@@ -23,19 +39,61 @@ export default class PatientController {
         }
     }
 
-    public async getPatientInfo(req: any, res: any) {
+    public async updateProfileImage(request: Request, res: Response) {
+        const req = request as UserRequest;
 
-        await Patients.findById(req.user._id, '-password -__v', (err, patient) => {
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No image was uploaded.');
+        }
+
+        let imageFile = req.files.file as UploadedFile;
+
+        await Patients.findById(req.body.patientID, (err, patient) => {
             if (err)
                 return res.status(400).send({ error: "Could not retrieve patient information" + err });
             if (patient === undefined)
-                return res.status(400).send({ error: "Patient " + req.user._id + " not found" });
+                return res.status(400).send({ error: "Patient " + req.body.patientID + " not found" });
             else {
-                return res.status(200).send(patient);
+                // Use the mv() method to place the file somewhere on your server
+                imageFile.mv(process.env.USER_IMAGES + "/" + req.body.patientID + ".png", function (err: any) {
+                    if (err) {
+                        console.log(err)
+                        return res.status(500).send(err);
+                    }
+
+                    return res.status(200).send('Profile image uploaded');
+                });
+            }
+        })
+    }
+
+    public async getProfileImage(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        await Patients.findById(req.params.patientID, (err, patient) => {
+            if (err)
+                return res.status(400).send({ error: "Could not retrieve patient information" + err });
+            if (patient === undefined)
+                return res.status(400).send({ error: "Patient " + req.params.patientID + " not found" });
+            else {
+                res.sendFile(process.env.USER_IMAGES + '/' + req.params.patientID + ".png", {
+                    headers: {
+                        'Content-Type': 'image/png',
+                        'Content-Disposition': 'inline'
+                    }
+                }, function (err: any) {
+                    if (err)
+                        if (!res.headersSent)
+                            res.status(500).send("error occured")
+                })
             }
         })
 
+
+
     }
+
+
 
     public async getPatientInfoByID(req: any, res: any) {
 
@@ -83,7 +141,6 @@ export default class PatientController {
     }
 
 
-    //METHOD NOT IMPLEMENTED YET
     //Returns the patient's medical history
     public async getPatientHistory(request: Request, res: Response) {
         const req = request as UserRequest;
@@ -139,14 +196,34 @@ export default class PatientController {
             //  however, since the query is done under the "_id" attribute, there should only be one element returned
             //  A check will be done here for safety eventhough there are no conditions where this array can be larger then 1.
 
-            if(evals.length > 1)
+            if (evals.length > 1)
                 throw new Error("Multiple users were found with the same id")
-            
+
             return res.status(200).send(evals.pop())
 
         } catch (error) {
             console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
         }
+    }
+
+
+
+    //Returns the first 20 patients, if a creation date is provided, it returns the following 20 patients
+    public async getAllPatients(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        await Patients
+            .find({ creationDate: { $lt: Number(req.params.creationDate) } }, '-password -__v')
+            .sort({ 'creationDate': -1 })
+            .limit(20)
+            .exec(
+                (err, patients) => {
+                    if (err)
+                        return res.status(400).send({ error: err });
+                    else {
+                        return res.status(200).send(patients);
+                    }
+                })
     }
 
 }

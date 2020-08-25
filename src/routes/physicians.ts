@@ -153,6 +153,38 @@ router.post("/profile", [
 
 
 /**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/profileImage",
+  passport.authenticate('jwt', { session: false }),
+  roleAuthorization(['PHYSICIAN', 'PATIENT']),
+  physicians.updateProfileImage);
+
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/profileImage/:physicianID",
+physicians.getProfileImage);
+
+/**
  * Get profile information of a user
  * 
  * @route GET /role/:role
@@ -169,6 +201,46 @@ router.get("/patients",
     physicians.listPatients
 )
 
+
+
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/search",
+  passport.authenticate('jwt', { session: false }),
+  roleAuthorization(['PHYSICIAN']),
+  physicians.getPhysicianByName
+);
+
+/**
+ * List patients in the system
+ * This method returns 20 patients at a time
+ * If provided the argument "creationDate" the system will return the next 20 patients after that date
+ * This is done so that the list can be lazy loaded, as an attempt to reduce load on the server
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/all/:creationDate",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN', 'PATIENT']),
+    physicians.getAllPhysicians
+);
 
 
 export default router;

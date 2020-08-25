@@ -3,6 +3,7 @@ import Patients, { PatientInterface, PatientLoginInterface } from "../schemas/Pa
 import mongoose, { Mongoose, Model } from "mongoose";
 import { Request, Response } from "express";
 import { UserRequest } from "../auth/auth";
+import { UploadedFile } from "express-fileupload";
 
 
 export default class PhysicianController {
@@ -38,6 +39,60 @@ export default class PhysicianController {
 
     }
 
+
+    public async updateProfileImage(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        console.log(req.body)
+
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No image was uploaded.');
+        }
+
+        let imageFile = req.files.file as UploadedFile;
+
+        await Physicians.findById(req.body.physicianID, (err, physician) => {
+            if (err)
+                return res.status(400).send({ error: "Could not retrieve physician information" + err });
+            if (physician === undefined)
+                return res.status(400).send({ error: "Physician " + req.body.physicianID + " not found" });
+            else {
+                // Use the mv() method to place the file somewhere on your server
+                imageFile.mv(process.env.USER_IMAGES + "/" + req.body.physicianID + ".png", function (err: any) {
+                    if (err) {
+                        console.log(err)
+                        return res.status(500).send(err);
+                    }
+
+                    return res.status(200).send('Profile image uploaded');
+                });
+            }
+        })
+    }
+
+    public async getProfileImage(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        await Physicians.findById(req.params.physicianID, (err, physician) => {
+            if (err)
+                return res.status(400).send({ error: "Could not retrieve physician information" + err });
+            if (physician === undefined)
+                return res.status(400).send({ error: "physician " + req.params.physicianID + " not found" });
+            else {
+                res.sendFile(process.env.USER_IMAGES + '/' + req.params.physicianID + ".png", {
+                    headers: {
+                        'Content-Type': 'image/png',
+                        'Content-Disposition': 'inline'
+                    }
+                }, function (err: any) {
+                    if (err)
+                        if (!res.headersSent)
+                            res.status(500).send("error occured")
+                })
+            }
+        })
+    }
+
     // Adds a patient to the list of patients under this physician's care
     public async adoptPatient(request: Request, res: Response) {
         const req = request as UserRequest;
@@ -64,7 +119,7 @@ export default class PhysicianController {
                 else
                     return res.status(200).send({ message: "Patient adopted" })
             }
-            
+
         } catch (err) {
             console.log(err)
             return res.status(400).send({ error: "Patient could not be adopted: \n" + err });
@@ -154,6 +209,45 @@ export default class PhysicianController {
             console.log(err)
             return res.status(400).send({ error: "An error occured: \n" + err });
         }
+
+    }
+
+
+    //Returns the first 20 physicians, if a creation date is provided, it returns the following 20 physicians
+    public async getAllPhysicians(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        await Physicians
+            .find({ creationDate: { $lt: Number(req.params.creationDate) } }, '-password -__v')
+            .sort({ 'creationDate': -1 })
+            .limit(20)
+            .exec(
+                (err, physicians) => {
+                    if (err)
+                        return res.status(400).send({ error: err });
+                    else {
+                        return res.status(200).send(physicians);
+                    }
+                })
+    }
+
+
+    //Returns patients with search term comming as param
+    public async getPhysicianByName(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        let foundAppoints;
+        let searchName = req.query.name as string
+
+        await Physicians.find({ name: { $regex: '.*' + searchName + '.*', $options: "i" } }, '-password -__v', (err, patient) => {
+            if (err)
+                return res.status(400).send({ error: "Could not find physician" + err });
+            if (patient === undefined)
+                return res.status(400).send({ error: "Physician with name " + searchName + " not found" });
+            else {
+                return res.status(200).send(patient);
+            }
+        })
 
     }
 

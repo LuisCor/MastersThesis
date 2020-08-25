@@ -42,7 +42,7 @@ passport.use('signup', new LocalStrategy({
         if (req.body.role === "PATIENT") {
 
             const patient = await Patients.create({
-
+                creationDate: Date.now(),
                 email,
                 password,
                 name: req.body.name,
@@ -64,7 +64,7 @@ passport.use('signup', new LocalStrategy({
 
         } else if (req.body.role === "PHYSICIAN") {
             const patient = await Physicians.create({
-
+                creationDate: Date.now(),
                 email,
                 password,
                 name: req.body.name,

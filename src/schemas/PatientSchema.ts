@@ -11,6 +11,7 @@ export interface PatientLoginInterface {
 
 // TS interface describing a Patient
 export interface PatientInterface extends mongoose.Document {
+    creationDate: number,
     email: string,
     name: string,
     password: string,
@@ -36,6 +37,7 @@ export interface PatientInterface extends mongoose.Document {
 // Mongo Schema describing a User for the db
 export const PatientSchema = new mongoose.Schema(
     {
+        creationDate: { type: Number, required: true},
         email: { type: String, required: true, unique: true },
         name: { type: String, required: true },
         password: { type: String, required: true },
@@ -82,6 +84,7 @@ PatientSchema.pre('save', async function (next) {
     const patient: PatientInterface = this as PatientInterface;
     const hash = await bcrypt.hash(patient.password, 10);
     patient.password = hash;
+
     next();
 
 });

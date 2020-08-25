@@ -11,8 +11,9 @@ export interface PhysicianLoginInterface {
 }
 
 
-// TS interface describing a Patient
+// TS interface describing a Physician
 export interface PhysicianInterface extends mongoose.Document {
+    creationDate: number,
     email: string,
     name: string,
     password: string,
@@ -35,6 +36,7 @@ export interface PhysicianInterface extends mongoose.Document {
 // Mongo Schema describing a User for the db
 export const PhysicianSchema = new mongoose.Schema(
     {
+        creationDate: { type: Number, required: true },
         email: { type: String, required: true, unique: true },
         name: { type: String, required: true },
         password: { type: String, required: true },
@@ -59,7 +61,7 @@ PhysicianSchema.pre('validate', function (next, data) {
         if (!res)
             next();
         else {
-            next(new Error("Patient already registered"))
+            next(new Error("Physician already registered"))
         }
     })
 
@@ -71,18 +73,19 @@ PhysicianSchema.pre('save', async function (next) {
     if (!this.isNew)
         next();
 
-    const patient: PhysicianInterface = this as PhysicianInterface;
-    const hash = await bcrypt.hash(patient.password, 10);
-    patient.password = hash;
+    const physician: PhysicianInterface = this as PhysicianInterface;
+    const hash = await bcrypt.hash(physician.password, 10);
+    physician.password = hash;
+
     next();
 
 });
 
 //Used to update the password by receiving the new string and hashing it
 PhysicianSchema.methods.setPassword = async function (password: string) {
-    const patient: PhysicianInterface = this as PhysicianInterface;
+    const physician: PhysicianInterface = this as PhysicianInterface;
     const hash = await bcrypt.hash(password, 10);
-    patient.password = hash;
+    physician.password = hash;
 }
 
 //Hashes the password sent by the user for login and checks if the hashed password stored in the

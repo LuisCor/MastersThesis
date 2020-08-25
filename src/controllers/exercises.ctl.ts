@@ -40,7 +40,7 @@ export default class ExerciseController {
 
                 const exercise = await Exercises.create(req.body)
                 let exerciseFile = req.files.exerciseFile;
-                exerciseFile.mv("/root/uploads/" + exercise._id + ".json", function (err: any) {
+                exerciseFile.mv(process.env.EXERCISES + "/" + exercise._id + ".json", function (err: any) {
                     if (err) {
                         console.log(err)
                         throw new Error(err)

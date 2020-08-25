@@ -49,7 +49,6 @@ export default class AppointmentSchema {
                         //Remove the fields from the aggregation
                         $project: {
                             "__v": 0,
-                            "patientsInfo._id": 0,
                             "patientsInfo.password": 0,
                             "patientsInfo.identificationNum": 0,
                             "patientsInfo.fiscalNumber": 0,
@@ -86,7 +85,6 @@ export default class AppointmentSchema {
                         //Remove the fields from the aggregation
                         $project: {
                             "__v": 0,
-                            "patientsInfo._id": 0,
                             "patientsInfo.password": 0,
                             "patientsInfo.identificationNum": 0,
                             "patientsInfo.fiscalNumber": 0,
