@@ -48,6 +48,9 @@ export default class PatientController {
 
         let imageFile = req.files.file as UploadedFile;
 
+        if (req.params.patientID === undefined)
+            return res.status(400).send({ error: "Could not post patient information" });
+
         await Patients.findById(req.body.patientID, (err, patient) => {
             if (err)
                 return res.status(400).send({ error: "Could not retrieve patient information" + err });
@@ -69,6 +72,9 @@ export default class PatientController {
 
     public async getProfileImage(request: Request, res: Response) {
         const req = request as UserRequest;
+
+        if (req.params.patientID === undefined)
+            return res.status(400).send({ error: "Could not retrieve patient information" });
 
         await Patients.findById(req.params.patientID, (err, patient) => {
             if (err)
