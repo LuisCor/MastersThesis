@@ -48,7 +48,7 @@ export default class PatientController {
 
         let imageFile = req.files.file as UploadedFile;
 
-        if (req.params.patientID === undefined)
+        if (req.body.patientID === undefined)
             return res.status(400).send({ error: "Could not post patient information" });
 
         await Patients.findById(req.body.patientID, (err, patient) => {
