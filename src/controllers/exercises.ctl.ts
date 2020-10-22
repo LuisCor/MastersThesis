@@ -5,6 +5,7 @@ import Exercises from "../schemas/ExerciseSchema";
 
 import { UserRequest } from "../auth/auth";
 import Patients from "../schemas/PatientSchema";
+import * as fs from 'fs';
 
 export default class ExerciseController {
 
@@ -26,26 +27,61 @@ export default class ExerciseController {
 
 
     public async createExercise(request: Request, res: Response) {
-        const req = request as any;
+        // const req = request as any;
 
-        if (!req.files || Object.keys(req.files).length === 0) {
-            return res.status(400).send('No files were uploaded.');
-        }
+        // if (!req.files || Object.keys(req.files).length === 0) {
+        //     return res.status(400).send('No files were uploaded.');
+        // }
+
+        // try {
+        //     req.body.creationDate = new Date();
+
+        //     const patient = await Patients.findById(req.body.patient)
+        //     if (patient) {
+
+        //         const exercise = await Exercises.create(req.body)
+        //         let exerciseFile = req.files.exerciseFile;
+        //         exerciseFile.mv(process.env.EXERCISES + "/" + exercise._id + ".json", function (err: any) {
+        //             if (err) {
+        //                 console.log(err)
+        //                 throw new Error(err)
+        //             }
+        //         });
+        //         return res.status(200).send(exercise)
+        //     }
+        //     else
+        //         return res.status(400).send({ error: "Patient: " + req.body.patient + " does not exist" })
+
+        // } catch (error) {
+        //     console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
+        // }
+
+
+        const req = request as UserRequest;
 
         try {
             req.body.creationDate = new Date();
+            req.body.patient = req.user._id;
+
+            console.log(req.body)
 
             const patient = await Patients.findById(req.body.patient)
             if (patient) {
+                const exercise = await Exercises.create(
+                    {
+                        creationDate : req.body.creationDate,
+                        patient : req.body.patient
+                    }
+                )
 
-                const exercise = await Exercises.create(req.body)
-                let exerciseFile = req.files.exerciseFile;
-                exerciseFile.mv(process.env.EXERCISES + "/" + exercise._id + ".json", function (err: any) {
+                let data = JSON.stringify(req.body.data);
+                fs.writeFile(process.env.EXERCISES + "/" + exercise._id + ".json", data, (err) => {
                     if (err) {
                         console.log(err)
-                        throw new Error(err)
+                        throw new Error(JSON.stringify(err))
                     }
                 });
+
                 return res.status(200).send(exercise)
             }
             else
@@ -54,6 +90,8 @@ export default class ExerciseController {
         } catch (error) {
             console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
         }
+
+
     }
 
 
@@ -65,10 +103,10 @@ export default class ExerciseController {
         try {
             const exercises = await Exercises.findById(req.query.exerciseID)
             console.log(exercises)
-            if(!exercises)
+            if (!exercises)
                 throw Error("Exercise not found")
 
-            
+
             res.download('/root/uploads/' + exercises?._id + '.json', function (err: any) {
                 if (err) {
                     if (!res.headersSent)
@@ -77,9 +115,9 @@ export default class ExerciseController {
                     console.log(res.headersSent)
                 }
             })
-    
+
         } catch (error) {
-            console.error(error); 
+            console.error(error);
             return res.status(400).send({ error: "An error occurred: " + error })
         }
 

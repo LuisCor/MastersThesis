@@ -103,17 +103,18 @@ router.get("/download",
         //     }
         // })
 
-        res.sendFile(process.env.USER_IMAGES + '/filename.file', {
+
+        res.sendFile(process.env.EXERCISES + "/" + req.query.id + ".json", {
             headers: {
-                'Content-Type': 'image/png',
-                'Content-Disposition': 'inline'
+                'Content-Type': 'application/json',
+                //'Content-Type': 'object/json', 
+                //'Content-Disposition': 'inline'
             }
         }, function (err: any) {
             if (err) {
                 // Handle error, but keep in mind the response may be partially-sent
                 // so check res.headersSent
                 console.log(res.headers)
-                console.log("penis grande")
                 console.log(res.headersSent)
                 console.log(err)
                 if (!res.headersSent)
