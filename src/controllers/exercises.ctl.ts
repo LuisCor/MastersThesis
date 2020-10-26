@@ -69,8 +69,8 @@ export default class ExerciseController {
             if (patient) {
                 const exercise = await Exercises.create(
                     {
-                        creationDate : req.body.creationDate,
-                        patient : req.body.patient
+                        creationDate: req.body.creationDate,
+                        patient: req.body.patient
                     }
                 )
 
@@ -98,8 +98,6 @@ export default class ExerciseController {
     public async getExercise(request: Request, res: Response) {
         const req = request as UserRequest;
 
-        console.log(req.query)
-        console.log(req.query.exerciseID)
         try {
             const exercises = await Exercises.findById(req.query.exerciseID)
             console.log(exercises)
@@ -107,21 +105,31 @@ export default class ExerciseController {
                 throw Error("Exercise not found")
 
 
-            res.download('/root/uploads/' + exercises?._id + '.json', function (err: any) {
+            res.sendFile(process.env.EXERCISES + "/" + req.query.exerciseID + ".json", {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }, function (err: any) {
                 if (err) {
+                    // Handle error, but keep in mind the response may be partially-sent
+                    // so check res.headersSent
+                    console.log(res.headersSent)
+                    console.log(err)
                     if (!res.headersSent)
-                        res.status(500).send("Exercise registered, but file was not found")
+                        res.status(500).send("error occured")
                 } else {
+                    // decrement a download credit, etc.
                     console.log(res.headersSent)
                 }
+                //         })
             })
 
-        } catch (error) {
-            console.error(error);
-            return res.status(400).send({ error: "An error occurred: " + error })
-        }
+            } catch (error) {
+                console.error(error);
+                return res.status(400).send({ error: "An error occurred: " + error })
+            }
 
-    }
+        }
 
 
 }
