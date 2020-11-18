@@ -51,7 +51,7 @@ export default class PhysicianController {
 
         let imageFile = req.files.file as UploadedFile;
 
-        if (req.params.physicianID === undefined)
+        if (req.body.physicianID === undefined)
             return res.status(400).send({ error: "Could not post physician information"});
 
         await Physicians.findById(req.body.physicianID, (err, physician) => {

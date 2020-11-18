@@ -117,9 +117,57 @@ export default class PatientController {
 
 
     //Returns the list of physicians taking care of this patient
-    public listPhysicians() {
-        return { message: "method not implemented yet" }
+    public async listPhysicians(request: Request, res: Response) {
+        const req = request as UserRequest;
+
+        try {
+
+            const evals = await Patients.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(req.user._id as any)
+                    },
+                },
+                {
+                    $lookup:
+                    {
+                        from: "physicians", // Other Collection
+                        localField: "physicians", // Name of the key to be aggregated with the other collection
+                        foreignField: "_id",    // Name of the key from the other collection to be aggregated with "localField"
+                        as: "physicians"     // Name of the resulting collection from the aggregation
+                    }
+                },
+                {
+                    //Remove the fields from the aggregation
+                    $project: {
+                        "_id": 0,
+                        "physicians._id": 1,
+                        "physicians.specialty": 1,
+                        "physicians.email": 1,
+                        "physicians.name": 1,
+                        "physicians.gender": 1,
+                        "physicians.phoneNumber": 1,
+                        "physicians.physicianID": 1,
+                    }
+                }
+            ]).exec();
+
+            //Aggregate returns an array since it does not know how many elements will be returned from the query,
+            //  however, since the query is done under the "_id" attribute, there should only be one element returned
+            //  A check will be done here for safety eventhough there are no conditions where this array can be larger then 1.
+
+            if (evals.length > 1)
+                throw new Error("Multiple users were found with the same id")
+
+            return res.status(200).send(evals.pop())
+
+        } catch (error) {
+            console.error(error); return res.status(400).send({ error: "An error occurred: " + error })
+        }
     }
+
+
+
 
     //Returns the list of pending exercises
     public listExercises() {
