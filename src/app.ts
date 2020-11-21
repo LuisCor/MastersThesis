@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
 import mongoose from "mongoose"
+import * as fs from "fs"
 import app from "./server"
 
 const port = process.env.SERVER_PORT;
@@ -17,6 +18,15 @@ let db = mongoose.connection;
 db.once('open', () => console.log('> Connected to the database'));
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
+//Setup directories for file uploads
+var userImages = process.env.USER_IMAGES;
+var exercises = process.env.EXERCISES;
+if(userImages)
+    if(!fs.existsSync(userImages))
+        fs.mkdirSync(userImages, {recursive: true});
+if(exercises)
+    if(!fs.existsSync(exercises))
+        fs.mkdirSync(exercises, {recursive: true});
 
 // Initialize the Express Server
 const server = app.listen(port, () => {

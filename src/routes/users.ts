@@ -3,15 +3,14 @@
 //  These functions are responsible for receiving and interpreting the incomming requests
 //  and produce appropriate responses based on other system functions
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import { roleAuthorization } from "../auth/auth"
 import UserController from '../controllers/user.ctl';
-import { UserInterface, UserLoginInterface } from '../schemas/UsersSchema';
+import { check, validationResult, param } from 'express-validator';
 const router = express.Router();
 const users = new UserController();
-
 
 /**
  * @typedef LoginInfo
@@ -30,29 +29,6 @@ const users = new UserController();
  * @property {string} phone
  */
 
-/**
- * Creates a new user in the system
- * 
- * @route POST /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
- * @produces application/json application/xml
- * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
- * @returns {string}  500 - Unexpected error
- */
-router.post("/", (req, res, next) => {
-  
-  passport.authenticate('signup', { session: false }, async (err, user, info) => {
-    if (err) {
-      return res.status(400).send({ message: err })
-    }
-    else
-    return res.status(200).send(user)
-  })(req, res, next);
-  
-});
 
 /**
  * Creates a new user in the system
@@ -66,7 +42,15 @@ router.post("/", (req, res, next) => {
  * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.post("/login", (req, res, next) => {
+router.post("/login", [
+  check('email').normalizeEmail().isEmail(),
+  check('password').isLength({ min: 5 })
+], (req: Request, res: Response, next: any) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(422).json({ errors: errors.array() });
+
 
   passport.authenticate('login', async (err, user, info) => {
     try {
@@ -77,10 +61,13 @@ router.post("/login", (req, res, next) => {
       req.login(user, { session: false }, async (error) => {
         if (error) return next(error)
 
-        const body = {
+
+        let body = {
           _id: user._id,
-          role: user.role
-        };
+          role: user.role,
+        } as any;
+        if(body.role == "PHYSICIAN")
+          body = {...body, specialty : user.specialty}
 
         const token = jwt.sign({
           user: body
@@ -96,41 +83,34 @@ router.post("/login", (req, res, next) => {
 });
 
 /**
- * Lists all users registered in the system
+ * Creates a new user in the system
  * 
- * @route GET /
- * @group Users - The actions and informations related to the system's users
- * @operationId List all Users
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
  * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PATIENT', 'PHYSICIAN']), (req, res, next) => {
-  // Get the list of available users from the controller
-  users.listUsers()
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-})
-
+router.get("/recoverPassword", users.recoverPassword)
 
 /**
- * Lists users of a specific role
+ * Creates a new user in the system
  * 
- * @route GET /role/:role
- * @param {string} role - The role of users to retrieve
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
  * @group Users
- * @operationId List Users with Role
+ * @operationId Create a new User
  * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users with role
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
  * @returns {string}  500 - Unexpected error
  */
-router.get("/role/:role", (req, res) => {
-
-  // Get the list of users with role from the controller
-  users.listWithRole(req.params.role as string)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
-
-})
+router.post("/resetPassword/:role/:token", [
+  param('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN")),
+  param('token').escape()
+], users.resetPassword)
 
 export default router;

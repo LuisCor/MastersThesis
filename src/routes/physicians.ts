@@ -3,12 +3,13 @@
 //  These functions are responsible for receiving and interpreting the incomming requests
 //  and produce appropriate responses based on other system functions
 
-import express from 'express';
+import express, {Request, Response} from 'express';
 import passport from "passport";
-import jwt from "jsonwebtoken";
-import { roleAuthorization } from "../auth/auth"
+import { param, check, validationResult } from "express-validator";
+
+import { roleAuthorization } from "../auth/auth";
 import PhysicianController from '../controllers/physician.ctl';
-import { UserInterface, UserLoginInterface, UserRequestInfo } from '../schemas/UsersSchema';
+
 const router = express.Router();
 const physicians = new PhysicianController();
 
@@ -30,6 +31,47 @@ const physicians = new PhysicianController();
  * @property {string} phone
  */
 
+
+/**
+ * Creates a new user in the system
+ * 
+ * @route POST /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/", [
+    check('email').normalizeEmail().isEmail(),
+    check('password').isLength({ min: 5 }),
+    check('name').escape(),
+    check('role', 'role does not exist').exists().custom((value, { req }) => (value === "PHYSICIAN")),
+    check('birthDate').isISO8601(),
+    check('gender').escape(),
+    check('phoneNumber').isMobilePhone("pt-PT"),
+    check('specialty').isArray({min: 1})
+  ], (req: Request, res: Response, next: any) => {
+  
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(422).json({ errors: errors.array() });
+  
+    passport.authenticate('signup', { session: false }, async (err, user, info) => {
+      if (err) {
+        return res.status(400).send({ message: err })
+      }
+      else
+        return res.status(200).send(user)
+    })(req, res, next);
+  
+  });
+  
+
+
+ 
 /**
  * Lists all users registered in the system
  * 
@@ -40,7 +82,13 @@ const physicians = new PhysicianController();
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.getPhysicianInfo)
+router.post("/adopt/:patientID", [
+    param('patientID').exists().escape()
+],
+    passport.authenticate("jwt", { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    physicians.adoptPatient
+)
 
 
 /**
@@ -53,20 +101,13 @@ router.get("/", passport.authenticate("jwt", {session : false}), roleAuthorizati
  * @returns {UserInfo.model} 200 - List of registered users
  * @returns {string}  500 - Unexpected error
  */
-router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.adoptPatient)
-
-
-/**
- * Lists all users registered in the system
- * 
- * @route GET /
- * @group Users - The actions and informations related to the system's users
- * @operationId List all Users
- * @produces application/json application/xml
- * @returns {UserInfo.model} 200 - List of registered users
- * @returns {string}  500 - Unexpected error
- */
-router.post("/drop/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), physicians.dropPatient)
+router.post("/drop/:patientID", [
+    param('patientID').exists().escape()
+],
+    passport.authenticate("jwt", { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    physicians.dropPatient
+)
 
 /**
  * Get profile information of a user
@@ -79,35 +120,127 @@ router.post("/drop/:patientID", passport.authenticate("jwt", {session : false}),
  * @returns {UserInfo.model} 200 - List of registered users with role
  * @returns {string}  500 - Unexpected error
  */
-router.get("/profile/:username", passport.authenticate('jwt', { session: false }), (req, res) => {
+router.get("/profile",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    physicians.getPhysicianInfo
+)
 
-  // Get the list of users with role from the controller
-  physicians.profileInfo(req.params.username as string)
-    .then((data) => (res.status(200).send(data)))
-    .catch((data) => (res.status(500).send(data)));
+/**
+ * Get profile information of a user
+ * 
+ * @route GET /role/:role
+ * @param {string} role - The role of users to retrieve
+ * @group Users
+ * @operationId List Users with Role
+ * @produces application/json application/xml
+ * @returns {UserInfo.model} 200 - List of registered users with role
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/profile", [
+    check('email').normalizeEmail().isEmail(),
+    check('password').isLength({ min: 5 }),
+    check('name').escape(),
+    check('role', 'role does not exist').exists().custom((value, { req }) => (value === "PATIENT" || value === "PHYSICIAN")),
+    check('birthDate').isISO8601(),
+    check('gender').escape(),
+    check('phoneNumber').isMobilePhone("pt-PT")
+  ],
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    physicians.updateProfileInfo
+)
 
-})
 
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.post("/profileImage",
+  passport.authenticate('jwt', { session: false }),
+  roleAuthorization(['PHYSICIAN', 'PATIENT']),
+  physicians.updateProfileImage);
+
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/profileImage/:physicianID",
+physicians.getProfileImage);
+
+/**
+ * Get profile information of a user
+ * 
+ * @route GET /role/:role
+ * @param {string} role - The role of users to retrieve
+ * @group Users
+ * @operationId List Users with Role
+ * @produces application/json application/xml
+ * @returns {UserInfo.model} 200 - List of registered users with role
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/patients",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN']),
+    physicians.listPatients
+)
+
+
+
+/**
+ * Get Patient information
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/search",
+  passport.authenticate('jwt', { session: false }),
+  roleAuthorization(['PHYSICIAN']),
+  physicians.getPhysicianByName
+);
+
+/**
+ * List patients in the system
+ * This method returns 20 patients at a time
+ * If provided the argument "creationDate" the system will return the next 20 patients after that date
+ * This is done so that the list can be lazy loaded, as an attempt to reduce load on the server
+ * 
+ * @route Get /
+ * @param {UserInfo.model} point.body.required - The information of the new user
+ * @group Users
+ * @operationId Create a new User
+ * @produces application/json application/xml
+ * @consumes application/json application/xml
+ * @returns {string} 200 - User creation successful
+ * @returns {string}  500 - Unexpected error
+ */
+router.get("/all/:creationDate",
+    passport.authenticate('jwt', { session: false }),
+    roleAuthorization(['PHYSICIAN', 'PATIENT']),
+    physicians.getAllPhysicians
+);
 
 
 export default router;
-
-
-///////////////////////////////////////////////////////////// LEGACY CODE - REFERENCE ONLY
-
-//// /**
-//  * Lists all users registered in the system
-//  * 
-//  * @route GET /
-//  * @group Users - The actions and informations related to the system's users
-//  * @operationId List all Users
-//  * @produces application/json application/xml
-//  * @returns {UserInfo.model} 200 - List of registered users
-//  * @returns {string}  500 - Unexpected error
-//  */
-// router.post("/adopt/:patientID", passport.authenticate("jwt", {session : false}), roleAuthorization(['PHYSICIAN']), (req, res, next) => {
-//   // Get the list of available users from the controller
-//   physicians.adoptPatient((req.user as UserRequestInfo)._id , req.params.patientID)
-//     .then((data) => (res.status(200).send(data)))
-//     .catch((data) => (res.status(500).send(data)));
-// })

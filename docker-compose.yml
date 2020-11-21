@@ -9,10 +9,28 @@ networks:
 
 services:
 
+  nginx:
+    container_name: phyrem-nginx
+    restart: always
+    depends_on: [phyrem-backend, phyrem-frontend]
+    image: nginx:1.15-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      phyrem_net:
+        ipv4_address: 172.30.1.5
+        aliases:
+          - phyrem-nginx
+
   phyrem-mongo:
     container_name: phyrem-mongo
     restart: always
     image: mongo
+    ports:
+      - "27017:27017"
     networks:
       phyrem_net:
         ipv4_address: 172.30.1.1
@@ -33,6 +51,20 @@ services:
         ipv4_address: 172.30.1.2
         aliases:
           - phyrem-backend
+
+  phyrem-frontend:
+    container_name: phyrem-frontend
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    restart: always
+    build: ../PhyRem_FE
+    ports:
+      - "3000:3000"
+    networks:
+      phyrem_net:
+        ipv4_address: 172.30.1.4
+        aliases:
+          - phyrem-frontend
 
   phyrem-docs:
     image: redocly/redoc

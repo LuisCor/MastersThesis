@@ -28,31 +28,59 @@ afterAll(async () => {
 });
 
 
+// const mockPatient = {
+//   email: "luiscor@mail",
+//   password: "qweasd",
+//   name: "Luis Cor",
+//   role: "PATIENT",
+//   birthDate: "15-12-1995",
+//   address: "Rua das Cenas n7",
+//   identificationNum: "1234",
+//   fiscalNumber: "6346346"
+// }
+
+// const mockPatient2 = {
+//   email: "otherdude@mail",
+//   password: "asdzxc",
+//   name: "Other Dude",
+//   role: "PATIENT",
+//   birthDate: "15-12-2000",
+//   address: "Rua da Liberdade lote 1",
+//   identificationNum: "47546",
+//   fiscalNumber: "786787"
+// }
+
 const mockPatient = {
-  email: "luiscor@mail",
-  password: "qweasd",
-  name: "Luis Cor",
+  creationDate: Date.now(),
   role: "PATIENT",
-  birthDate: "15-12-1995",
-  address: "Rua das Cenas n7",
-  identificationNum: "1234 ZTP",
-  fiscalNumber: "6346346"
+  email: "test@mail.com",
+  password: "qweasd",
+  name: "TestPatient",
+  gender: "male",
+  birthDate: "1994-07-08T00:00:00.000Z",
+  address: "Rua de Teste Com n23",
+  identificationNum: "189328213",
+  fiscalNumber: "893489",
+  phoneNumber: "917284123"
 }
 
 const mockPatient2 = {
-  email: "otherdude@mail",
-  password: "asdzxc",
-  name: "Other Dude",
+  creationDate: Date.now(),
   role: "PATIENT",
-  birthDate: "15-12-2000",
-  address: "Rua da Liberdade lote 1",
-  identificationNum: "47546 ZTP",
-  fiscalNumber: "786787"
+  email: "test2@mail.com",
+  password: "qweasd",
+  name: "TestPatient2",
+  gender: "female",
+  birthDate: "1993-01-12T00:00:00.000Z",
+  address: "Rua de Segundo Teste Com n 53",
+  identificationNum: "98732494",
+  fiscalNumber: "09436",
+  phoneNumber: "920124456"
 }
 
 let token: string;
 
-describe('Testing User Controller', () => {
+describe('Testing User Routes', () => {
 
   it('DB Sanity Check', async () => {
 
@@ -64,14 +92,14 @@ describe('Testing User Controller', () => {
 
   it('User Login', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/login')
       .query({email: mockPatient.email})
       .query({password: mockPatient.password})
       .query({role: mockPatient.role})
       .send()
 
     token = res.body.token;
-    
+
     expect(res.status).toEqual(200);
     expect(token).not.toBeNull();
   })
@@ -79,7 +107,7 @@ describe('Testing User Controller', () => {
   it('Requests require auth by token', async () => {
 
     const res = await request(app)
-      .get('/')
+      .get('/api/patient/profile')
 
     expect(res.status).toEqual(401)
 
@@ -87,24 +115,31 @@ describe('Testing User Controller', () => {
 
   it('There is one registered user', async () => {
     const res = await request(app)
-      .get('/')
+      .get('/api/patient/profile')
       .set('Authorization', `Bearer ${token}`)
 
     expect(res.status).toEqual(200)
-    expect(res.body).toHaveLength(1)
+    expect(res.body).toHaveProperty("email")
+    expect(res.body).toHaveProperty("name")
+    expect(res.body).toHaveProperty("role")
+    expect(res.body).toHaveProperty("birthDate")
+    expect(res.body).toHaveProperty("address")
+    expect(res.body).toHaveProperty("identificationNum")
+    expect(res.body).toHaveProperty("fiscalNumber")
 
   });
 
-  // it('Registering new user', async () => {
+  it('Registering new user', async () => {
 
-  //   const res = await request(app)
-  //     .post('/users')
-  //     .send(mockUser)
+    const res = await request(app)
+      .post('/api/patient')
+      .send(mockPatient2)
 
-  //   expect(res.status).toEqual(200)
-  //   expect(res.body).toEqual(mockUserResponse)
+    expect(res.status).toEqual(200)
+    expect(res.body).toHaveProperty("email")
+    expect(res.body).toHaveProperty("id")
 
-  // });
+  });
 
 
 });
