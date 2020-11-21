@@ -28,26 +28,54 @@ afterAll(async () => {
 });
 
 
+// const mockPatient = {
+//   email: "luiscor@mail",
+//   password: "qweasd",
+//   name: "Luis Cor",
+//   role: "PATIENT",
+//   birthDate: "15-12-1995",
+//   address: "Rua das Cenas n7",
+//   identificationNum: "1234",
+//   fiscalNumber: "6346346"
+// }
+
+// const mockPatient2 = {
+//   email: "otherdude@mail",
+//   password: "asdzxc",
+//   name: "Other Dude",
+//   role: "PATIENT",
+//   birthDate: "15-12-2000",
+//   address: "Rua da Liberdade lote 1",
+//   identificationNum: "47546",
+//   fiscalNumber: "786787"
+// }
+
 const mockPatient = {
-  email: "luiscor@mail",
-  password: "qweasd",
-  name: "Luis Cor",
+  creationDate: Date.now(),
   role: "PATIENT",
-  birthDate: "15-12-1995",
-  address: "Rua das Cenas n7",
-  identificationNum: "1234 ZTP",
-  fiscalNumber: "6346346"
+  email: "test@mail.com",
+  password: "qweasd",
+  name: "TestPatient",
+  gender: "male",
+  birthDate: "1994-07-08T00:00:00.000Z",
+  address: "Rua de Teste Com n23",
+  identificationNum: "189328213",
+  fiscalNumber: "893489",
+  phoneNumber: "917284123"
 }
 
 const mockPatient2 = {
-  email: "otherdude@mail",
-  password: "asdzxc",
-  name: "Other Dude",
+  creationDate: Date.now(),
   role: "PATIENT",
-  birthDate: "15-12-2000",
-  address: "Rua da Liberdade lote 1",
-  identificationNum: "47546 ZTP",
-  fiscalNumber: "786787"
+  email: "test2@mail.com",
+  password: "qweasd",
+  name: "TestPatient2",
+  gender: "female",
+  birthDate: "1993-01-12T00:00:00.000Z",
+  address: "Rua de Segundo Teste Com n 53",
+  identificationNum: "98732494",
+  fiscalNumber: "09436",
+  phoneNumber: "920124456"
 }
 
 let token: string;
@@ -64,14 +92,14 @@ describe('Testing User Routes', () => {
 
   it('User Login', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/login')
       .query({email: mockPatient.email})
       .query({password: mockPatient.password})
       .query({role: mockPatient.role})
       .send()
 
     token = res.body.token;
-    
+
     expect(res.status).toEqual(200);
     expect(token).not.toBeNull();
   })
@@ -79,7 +107,7 @@ describe('Testing User Routes', () => {
   it('Requests require auth by token', async () => {
 
     const res = await request(app)
-      .get('/patient/profile')
+      .get('/api/patient/profile')
 
     expect(res.status).toEqual(401)
 
@@ -87,7 +115,7 @@ describe('Testing User Routes', () => {
 
   it('There is one registered user', async () => {
     const res = await request(app)
-      .get('/patient/profile')
+      .get('/api/patient/profile')
       .set('Authorization', `Bearer ${token}`)
 
     expect(res.status).toEqual(200)
@@ -104,7 +132,7 @@ describe('Testing User Routes', () => {
   it('Registering new user', async () => {
 
     const res = await request(app)
-      .post('/')
+      .post('/api/patient')
       .send(mockPatient2)
 
     expect(res.status).toEqual(200)
