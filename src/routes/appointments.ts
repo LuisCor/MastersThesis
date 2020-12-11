@@ -9,18 +9,33 @@ import { specialtyAuthorization } from '../schemas/PhysicianSchema';
 const router = express.Router();
 const appointments = new AppointmentController();
 
+/**
+ * @typedef AppointmentInfo
+ * @property {string} startDate
+ * @property {string} endDate
+ * @property {string} location
+ * @property {string} status
+ * @property {string} summary
+ * @property {string} patientEval
+ * @property {string} objective
+ * @property {string} diagnostic
+ * @property {string} treatment
+ * @property {string} physician
+ * @property {string} patient
+ */
 
 
 /**
- * Get Patient information
+ * Get the list of appointments of the requesting user
  * 
- * @route Get /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
+ * @route GET /
+ * @group Appointment
+ * @param {string} order.query.required - The order of the query result, ascending or descending
+ * @param {string} date.query.required - The date of the last appointment in the previous request, current date if no request was done previously
+ * @operationId Get List of Appointments
  * @produces application/json application/xml
  * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
+ * @returns {[AppointmentInfo]} 200 - Array of Appointment information
  * @returns {string}  500 - Unexpected error
  */
 router.get("/",
@@ -30,15 +45,16 @@ router.get("/",
 );
 
 /**
- * Get Patient information
+ * Get the list of appointments of the requesting user between a start and end dates
  * 
- * @route Get /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
+ * @route GET /between
+ * @group Appointment
+ * @param {string} startDate - Start date in format YYYY-MM-DD
+ * @param {string} endDate- End date in format YYYY-MM-DD
+ * @operationId Get List of Appointments between a date interval
  * @produces application/json application/xml
  * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
+ * @returns {[AppointmentInfo]} 200 - Array of Appointment information
  * @returns {string}  500 - Unexpected error
  */
 router.get("/between",
@@ -49,15 +65,14 @@ router.get("/between",
 
 
 /**
- * Get Patient information
+ * Get the list of appointments of the requesting user for the current date
  * 
- * @route Get /
- * @param {UserInfo.model} point.body.required - The information of the new user
- * @group Users
- * @operationId Create a new User
+ * @route GET /today
+ * @group Appointment
+ * @operationId Get List of Appointments for the current date
  * @produces application/json application/xml
  * @consumes application/json application/xml
- * @returns {string} 200 - User creation successful
+ * @returns {[AppointmentInfo]} 200 - Array of Appointment information
  * @returns {string}  500 - Unexpected error
  */
 router.get("/today",

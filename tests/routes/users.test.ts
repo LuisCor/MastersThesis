@@ -3,6 +3,36 @@ import app from "../app.test";
 import Patients from "../../src/schemas/PatientSchema"
 import mongoose from "mongoose"
 import { MongoMemoryServer } from "mongodb-memory-server"
+import PatientController from '../../src/controllers/patient.ctl';
+const patients = new PatientController();
+
+
+const mockRequest = (patient : any) => {
+  let req = {} as any
+  req.user = {
+    _id: patient._id,
+    role: patient.role
+  }
+  req.body = jest.fn().mockReturnValue(req)
+  req.params = jest.fn().mockReturnValue(req)
+  return req
+};
+
+const mockResponse = () => {
+  let res = {} as any
+  res.send = jest.fn().mockReturnValue(res)
+  res.status = jest.fn().mockReturnValue(res)
+  res.json = jest.fn().mockReturnValue(res)
+  return res
+};
+
+async function removeAllCollections() {
+  const collections = Object.keys(mongoose.connection.collections)
+  for (const collectionName of collections) {
+    const collection = mongoose.connection.collections[collectionName]
+    await collection.deleteMany({})
+  }
+}
 
 jest.setTimeout(20000);
 
@@ -20,6 +50,10 @@ beforeAll(async () => {
 });
 
 //TODO Create inBetween function to drop all documents from db for tests to be independent
+// Cleans up database between each test
+afterEach(async () => {
+  await removeAllCollections();
+})
 
 afterAll(async () => {
   await mongoose.disconnect();
@@ -91,11 +125,13 @@ describe('Testing User Routes', () => {
   });
 
   it('User Login', async () => {
+    await new Patients(mockPatient).save();
+
     const res = await request(app)
       .post('/api/login')
-      .query({email: mockPatient.email})
-      .query({password: mockPatient.password})
-      .query({role: mockPatient.role})
+      .query({ email: mockPatient.email })
+      .query({ password: mockPatient.password })
+      .query({ role: mockPatient.role })
       .send()
 
     token = res.body.token;
@@ -105,6 +141,17 @@ describe('Testing User Routes', () => {
   })
 
   it('Requests require auth by token', async () => {
+    await new Patients(mockPatient).save();
+
+    const reslogin = await request(app)
+      .post('/api/login')
+      .query({ email: mockPatient.email })
+      .query({ password: mockPatient.password })
+      .query({ role: mockPatient.role })
+      .send()
+
+    token = reslogin.body.token;
+
 
     const res = await request(app)
       .get('/api/patient/profile')
@@ -114,6 +161,17 @@ describe('Testing User Routes', () => {
   });
 
   it('There is one registered user', async () => {
+    await new Patients(mockPatient).save();
+
+    const reslogin = await request(app)
+      .post('/api/login')
+      .query({ email: mockPatient.email })
+      .query({ password: mockPatient.password })
+      .query({ role: mockPatient.role })
+      .send()
+
+    token = reslogin.body.token;
+
     const res = await request(app)
       .get('/api/patient/profile')
       .set('Authorization', `Bearer ${token}`)
@@ -130,6 +188,7 @@ describe('Testing User Routes', () => {
   });
 
   it('Registering new user', async () => {
+    await new Patients(mockPatient).save();
 
     const res = await request(app)
       .post('/api/patient')
@@ -141,5 +200,28 @@ describe('Testing User Routes', () => {
 
   });
 
+
+});
+
+
+describe('Testing Patient Controller', () => {
+
+  it('Get All Patients (1 patient)', async () => {
+
+    var patient = await new Patients(mockPatient).save();
+
+    let req = mockRequest(patient);
+    let res = {} as any
+    res.send = jest.fn().mockReturnValue(res)
+    res.status = jest.fn().mockReturnValue(res)
+    res.json = jest.fn().mockReturnValue(res)
+
+    await patients.getAllPatients(req, res);
+
+    expect(res.status).toEqual(200)
+    expect(res.body).toHaveProperty("patients")
+    expect(res.body.patients).toHaveProperty("id")
+
+  });
 
 });
