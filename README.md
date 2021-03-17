@@ -1,6 +1,6 @@
 # **PhyRem Backend** - Server Application, Database and Docker
 
-CI Test Result -> [![CircleCI](https://circleci.com/gh/LuisCor/PhyRem_BE.svg?style=svg&circle-token=79f74f6eb060be57ff90327b39886a93297b7f30)](https://circleci.com/gh/LuisCor/PhyRem_BE/?branch=master)
+CI Test Result -> [![CircleCI](https://circleci.com/gh/PhyRemProject/PhyRem_BE.svg?style=svg&circle-token=79f74f6eb060be57ff90327b39886a93297b7f30)](https://circleci.com/gh/PhyRemProject/PhyRem_BE/?branch=master)
 
 
 This is the PhyRem Backend components, these are: a NodeJS with Express server application, managing a MongoDB through Mongoose. These components are all containerized with Docker and a `docker-compose` file is available for easy deployment of the service.
